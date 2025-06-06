@@ -11,118 +11,28 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
-  background-color: #28a745;
+  background: #000;
   font-family: 'Share Tech Mono', monospace;
 }
-#wrapper {
-  text-align: center;
-}
 #counter {
-  font-size: 20vw;
+  font-size: 30vw;
   line-height: 1;
-  width: 100%;
-  color: #FF5733;
-}
-#target {
-  font-size: 5vw;
-  color: #0f0;
-}
-
-#controls {
-  margin-top: 1rem;
-}
-
-#goalLabel {
-  font-size: 2vw;
-  color: #fff;
+  color: #00ff00;
 }
 </style>
 </head>
 <body>
-<div id="wrapper">
-  <div id="counter">0</div>
-  <div id="target"></div>
-</div>
-<div id="controls">
-  <input type="range" id="goalSlider" min="100000" max="1000000" step="10000" value="500000">
-  <div id="goalLabel"></div>
-</div>
+<div id="counter">0</div>
 <script>
-let monthlyGoal = 500000;
-let currentValue = 0;
-const slider = document.getElementById('goalSlider');
-const goalLabel = document.getElementById('goalLabel');
-
-function updateGoalDisplay() {
-  goalLabel.textContent = monthlyGoal.toLocaleString();
-  slider.value = monthlyGoal;
-  const target = dailyTarget();
-  updateTargetDisplay(target);
-  document.getElementById('counter').style.color = getColor(currentValue, target);
-}
-
-slider.addEventListener('input', () => {
-  monthlyGoal = Number(slider.value);
-  updateGoalDisplay();
-  updateCounter();
-});
-
-function dailyTarget() {
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  return (monthlyGoal / daysInMonth) * now.getDate();
-}
-
-function updateTargetDisplay(value) {
-  document.getElementById('target').textContent = Math.round(value).toLocaleString();
-}
-
-function getColor(value, target) {
-  if (value >= target * 1.1) {
-    return '#DAF7A6';
-  }
-  if (value >= target * 0.9) {
-    return '#FFC300';
-  }
-  return '#FF5733';
-}
-
-function animateCounter(endValue, target) {
-  const element = document.getElementById('counter');
-  const start = parseInt(element.textContent.replace(/,/g, ''), 10) || 0;
-  const duration = 2000;
-  const startTime = performance.now();
-
-  function tick(now) {
-    const progress = Math.min((now - startTime) / duration, 1);
-    const value = Math.floor(start + (endValue - start) * progress);
-    element.textContent = value.toLocaleString();
-    element.style.color = getColor(value, target);
-    if (progress < 1) requestAnimationFrame(tick);
-  }
-
-  requestAnimationFrame(tick);
-}
-
 async function updateCounter() {
-  const target = dailyTarget();
-  updateTargetDisplay(target);
   try {
     const res = await fetch('/api');
     const data = await res.json();
-    const value = data.number ?? 0;
-    if (value !== currentValue) {
-      animateCounter(value, target);
-      currentValue = value;
-    } else {
-      document.getElementById('counter').style.color = getColor(value, target);
-    }
+    document.getElementById('counter').textContent = data.number ?? '0';
   } catch (err) {
     console.error('Failed to fetch counter:', err);
   }
 }
-
-updateGoalDisplay();
 updateCounter();
 setInterval(updateCounter, 5000);
 </script>
