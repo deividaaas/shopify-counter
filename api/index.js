@@ -1,4 +1,6 @@
-const fetch = require('node-fetch');
+// Node.js 18+ provides a global `fetch` implementation, so we no longer
+// need the `node-fetch` dependency. Using the global version avoids
+// install failures in environments without network access.
 
 const URL_1 = "https://smiirl-shopify.herokuapp.com/c/096a519a-f432-48da-beb2-c0ae6438e9e1";
 const URL_2 = "https://smiirl-shopify.herokuapp.com/c/7e429d3d-726a-44c8-9cae-b4dbe8e3f9bd";
