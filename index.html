@@ -58,16 +58,17 @@ function getColor(value, target) {
   return '#FF5733';
 }
 
-function animateCounter(target) {
+function animateCounter(endValue, target) {
   const element = document.getElementById('counter');
-  const start = parseInt(element.textContent, 10) || 0;
+  const start = parseInt(element.textContent.replace(/,/g, ''), 10) || 0;
   const duration = 2000;
   const startTime = performance.now();
 
   function tick(now) {
     const progress = Math.min((now - startTime) / duration, 1);
-    const value = Math.floor(start + (target - start) * progress);
+    const value = Math.floor(start + (endValue - start) * progress);
     element.textContent = value.toLocaleString();
+    element.style.color = getColor(value, target);
     if (progress < 1) requestAnimationFrame(tick);
   }
 
@@ -81,10 +82,11 @@ async function updateCounter() {
     const res = await fetch('/api');
     const data = await res.json();
     const value = data.number ?? 0;
-    document.getElementById('counter').style.color = getColor(value, target);
     if (value !== currentValue) {
-      animateCounter(value);
+      animateCounter(value, target);
       currentValue = value;
+    } else {
+      document.getElementById('counter').style.color = getColor(value, target);
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
