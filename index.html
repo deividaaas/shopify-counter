@@ -5,6 +5,33 @@
 <title>Shopify Counter</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+#hamburger {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 30px;
+  cursor: pointer;
+  user-select: none;
+}
+#nav-menu {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: none;
+  font-size: 1.2em;
+}
+#nav-menu.open {
+  display: block;
+}
+#nav-menu a {
+  display: block;
+  text-decoration: none;
+  color: #333;
+  margin: 5px 0;
+}
 body {
   display: flex;
   flex-direction: column;
@@ -72,6 +99,12 @@ body {
 </style>
 </head>
 <body>
+<div id="hamburger">&#9776;</div>
+<div id="nav-menu">
+  <a href="#">Home</a>
+  <a href="#">Stats</a>
+  <a href="#">Settings</a>
+</div>
 <div id="wrapper">
   <div id="counter">0</div>
   <div id="target"></div>
@@ -96,8 +129,14 @@ const progressContainer = document.getElementById('progress-container');
 const progressSales = document.getElementById('sales-value');
 const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
+const hamburger = document.getElementById('hamburger');
+const navMenu = document.getElementById('nav-menu');
 let monthlyGoal = 500000;
 let currentValue = 0;
+
+hamburger.addEventListener('click', () => {
+  navMenu.classList.toggle('open');
+});
 
 function dailyTarget() {
   const now = new Date();
