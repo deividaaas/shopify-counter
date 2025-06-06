@@ -111,8 +111,21 @@ function updateProgress(value) {
   syncProgressWidth();
 }
 
+function measureSixDigitWidth() {
+  const span = document.createElement('span');
+  span.textContent = '000000';
+  span.style.position = 'absolute';
+  span.style.visibility = 'hidden';
+  span.style.fontFamily = window.getComputedStyle(counterElement).fontFamily;
+  span.style.fontSize = window.getComputedStyle(counterElement).fontSize;
+  document.body.appendChild(span);
+  const width = span.offsetWidth;
+  document.body.removeChild(span);
+  return width;
+}
+
 function syncProgressWidth() {
-  progressContainer.style.width = counterElement.offsetWidth + 'px';
+  progressContainer.style.width = measureSixDigitWidth() + 'px';
 }
 
 function getColor(value, target) {
