@@ -24,18 +24,32 @@ body {
   width: 100%;
   color: #FF5733;
 }
-#target {
-  font-size: 5vw;
-}
-#slider-container {
-  margin-top: 20px;
-}
+  #target {
+    font-size: 5vw;
+  }
+  #progress-container {
+    width: 80%;
+    height: 20px;
+    background-color: #ccc;
+    margin-top: 20px;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #FF5733;
+  }
+  #slider-container {
+    margin-top: 20px;
+  }
 </style>
 </head>
 <body>
 <div id="wrapper">
   <div id="counter">0</div>
   <div id="target"></div>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
   <div id="slider-container">
     <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
     <div id="goal-label"></div>
@@ -44,6 +58,7 @@ body {
 <script>
 const slider = document.getElementById('goal-slider');
 const goalLabel = document.getElementById('goal-label');
+const progressBar = document.getElementById('progress-bar');
 let monthlyGoal = 500000;
 let currentValue = 0;
 
@@ -59,6 +74,12 @@ function updateGoalDisplay() {
 
 function updateTargetDisplay(target) {
   document.getElementById('target').textContent = target.toLocaleString();
+}
+
+function updateProgress(value, target) {
+  const percent = Math.min(value / target, 1) * 100;
+  progressBar.style.width = percent + '%';
+  progressBar.style.backgroundColor = getColor(value, target);
 }
 
 function getColor(value, target) {
@@ -78,6 +99,7 @@ function animateCounter(endValue, target) {
     const value = Math.floor(start + (endValue - start) * progress);
     element.textContent = value.toLocaleString();
     element.style.color = getColor(value, target);
+    updateProgress(value, target);
     if (progress < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -86,6 +108,7 @@ function animateCounter(endValue, target) {
 async function updateCounter() {
   const target = dailyTarget();
   updateTargetDisplay(target);
+  updateProgress(currentValue, target);
   try {
     const res = await fetch('/api');
     const data = await res.json();
@@ -95,6 +118,7 @@ async function updateCounter() {
       currentValue = value;
     } else {
       document.getElementById('counter').style.color = getColor(value, target);
+      updateProgress(value, target);
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
@@ -106,6 +130,8 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
+  const target = dailyTarget();
+  updateProgress(currentValue, target);
   updateCounter();
 });
 
