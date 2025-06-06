@@ -69,9 +69,35 @@ body {
     border-color: #666;
     background-color: #fff;
   }
+  #burger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 5vw;
+    cursor: pointer;
+    user-select: none;
+  }
+  #menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: none;
+    font-size: 2vw;
+  }
 </style>
 </head>
 <body>
+<div id="burger">&#9776;</div>
+<div id="menu">
+  <div id="slider-container">
+    <label for="goal-slider">Monthly goal:</label>
+    <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
+    <span id="goal-label" contenteditable="true"></span>
+  </div>
+</div>
 <div id="wrapper">
   <div id="counter">0</div>
   <div id="target"></div>
@@ -82,11 +108,6 @@ body {
       <span id="remaining-value"></span>
     </div>
   </div>
-  <div id="slider-container">
-    <label for="goal-slider">Monthly goal:</label>
-    <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
-    <span id="goal-label" contenteditable="true"></span>
-  </div>
 </div>
 <script>
 const slider = document.getElementById('goal-slider');
@@ -96,8 +117,14 @@ const progressContainer = document.getElementById('progress-container');
 const progressSales = document.getElementById('sales-value');
 const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
+const burger = document.getElementById('burger');
+const menu = document.getElementById('menu');
 let monthlyGoal = 500000;
 let currentValue = 0;
+
+burger.addEventListener('click', () => {
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+});
 
 function dailyTarget() {
   const now = new Date();
