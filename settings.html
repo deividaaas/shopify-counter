@@ -105,8 +105,11 @@ const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 
 const now = new Date();
+// Use the same YYYY-MM key as the main page
 const monthKey = now.toISOString().slice(0,7);
+// Retrieve stored month goals from localStorage
 const monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+// Default goal if none exists yet
 let monthlyGoal = Number(monthlyGoals[monthKey]) || 500000;
 
 function updateGoalDisplay() {
@@ -123,6 +126,7 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
+  // Persist the slider value for this month
   monthlyGoals[monthKey] = monthlyGoal;
   localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
@@ -135,6 +139,7 @@ goalLabel.addEventListener('blur', () => {
     slider.value = value;
   }
   updateGoalDisplay();
+  // Save goal after manual edit
   monthlyGoals[monthKey] = monthlyGoal;
   localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
@@ -148,6 +153,7 @@ document.querySelectorAll('#goals-table input').forEach(input => {
     const digits = input.value.replace(/[^0-9]/g, '');
     const val = Number(digits);
     if (!isNaN(val) && val >= 100000 && val <= 1000000) {
+      // Keep each month's value separate
       monthlyGoals[key] = val;
       if (key === monthKey) {
         monthlyGoal = val;
@@ -158,9 +164,10 @@ document.querySelectorAll('#goals-table input').forEach(input => {
     } else {
       input.value = monthlyGoals[key] ? monthlyGoals[key].toLocaleString() : '';
     }
-    localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
+      // Save the table value back to localStorage
+      localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
+    });
   });
-});
 </script>
 </body>
 </html>
