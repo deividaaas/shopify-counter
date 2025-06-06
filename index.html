@@ -28,22 +28,32 @@ body {
     font-size: 5vw;
   }
   #progress-container {
-    height: 20px;
+    position: relative;
+    height: 25px;
     background-color: #ccc;
     margin-top: 20px;
-    position: relative;
     width: fit-content;
+    font-family: 'Share Tech Mono', monospace;
   }
   #progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 0%;
     background-color: #FF5733;
+    z-index: 0;
+  }
+  #progress-text {
+    position: relative;
+    z-index: 1;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
+    height: 100%;
+    padding: 0 6px;
+    font-size: 2vw;
     color: #000;
-    font-size: 3vw;
-    font-family: 'Share Tech Mono', monospace;
   }
   #slider-container {
     margin-top: 20px;
@@ -56,6 +66,10 @@ body {
   <div id="target"></div>
   <div id="progress-container">
     <div id="progress-bar"></div>
+    <div id="progress-text">
+      <span id="sales-value"></span>
+      <span id="remaining-value"></span>
+    </div>
   </div>
   <div id="slider-container">
     <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
@@ -67,6 +81,8 @@ const slider = document.getElementById('goal-slider');
 const goalLabel = document.getElementById('goal-label');
 const progressBar = document.getElementById('progress-bar');
 const progressContainer = document.getElementById('progress-container');
+const progressSales = document.getElementById('sales-value');
+const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
 let monthlyGoal = 500000;
 let currentValue = 0;
@@ -85,12 +101,13 @@ function updateTargetDisplay(target) {
   document.getElementById('target').textContent = target.toLocaleString();
 }
 
-function updateProgress(value, target) {
-  const percent = Math.min(value / target, 1) * 100;
+function updateProgress(value) {
+  const percent = Math.min(value / monthlyGoal, 1) * 100;
   progressBar.style.width = percent + '%';
-  progressBar.style.backgroundColor = getColor(value, target);
-  progressBar.textContent = Math.round(value).toLocaleString() + ' / ' +
-    Math.round(target).toLocaleString();
+  progressBar.style.backgroundColor = getColor(value, monthlyGoal);
+  progressSales.textContent = Math.round(value).toLocaleString();
+  const remaining = Math.max(monthlyGoal - value, 0);
+  progressRemaining.textContent = remaining.toLocaleString();
   syncProgressWidth();
 }
 
@@ -115,7 +132,7 @@ function animateCounter(endValue, target) {
     const value = Math.floor(start + (endValue - start) * progress);
     element.textContent = value.toLocaleString();
     element.style.color = getColor(value, target);
-    updateProgress(value, target);
+    updateProgress(value);
     if (progress < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -124,7 +141,7 @@ function animateCounter(endValue, target) {
 async function updateCounter() {
   const target = dailyTarget();
   updateTargetDisplay(target);
-  updateProgress(currentValue, target);
+  updateProgress(currentValue);
   try {
     const res = await fetch('/api');
     const data = await res.json();
@@ -134,7 +151,7 @@ async function updateCounter() {
       currentValue = value;
     } else {
       document.getElementById('counter').style.color = getColor(value, target);
-      updateProgress(value, target);
+      updateProgress(value);
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
@@ -147,7 +164,7 @@ slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
   const target = dailyTarget();
-  updateProgress(currentValue, target);
+  updateProgress(currentValue);
   updateCounter();
 });
 
