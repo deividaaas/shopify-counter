@@ -4,8 +4,5 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js"
-  },
-  "dependencies": {
-    "node-fetch": "^2.7.0"
   }
 }
