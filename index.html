@@ -21,7 +21,7 @@ body {
   font-size: 20vw;
   line-height: 1;
   width: 100%;
-  color: #f00;
+  color: #FF5733;
 }
 #target {
   font-size: 5vw;
@@ -48,6 +48,16 @@ function updateTargetDisplay(value) {
   document.getElementById('target').textContent = Math.round(value).toLocaleString();
 }
 
+function getColor(value, target) {
+  if (value >= target * 1.1) {
+    return '#DAF7A6';
+  }
+  if (value >= target * 0.9) {
+    return '#FFC300';
+  }
+  return '#FF5733';
+}
+
 function animateCounter(target) {
   const element = document.getElementById('counter');
   const start = parseInt(element.textContent, 10) || 0;
@@ -71,7 +81,7 @@ async function updateCounter() {
     const res = await fetch('/api');
     const data = await res.json();
     const value = data.number ?? 0;
-    document.getElementById('counter').style.color = value >= target ? '#0f0' : '#f00';
+    document.getElementById('counter').style.color = getColor(value, target);
     if (value !== currentValue) {
       animateCounter(value);
       currentValue = value;
