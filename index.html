@@ -101,9 +101,9 @@ body {
 <body>
 <div id="hamburger">&#9776;</div>
 <div id="nav-menu">
-  <a href="#">Home</a>
+  <a href="index.html">Home</a>
   <a href="#">Stats</a>
-  <a href="#">Settings</a>
+  <a href="settings.html">Settings</a>
 </div>
 <div id="wrapper">
   <div id="counter">0</div>
@@ -131,7 +131,7 @@ const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
-let monthlyGoal = 500000;
+let monthlyGoal = Number(localStorage.getItem('monthlyGoal')) || 500000;
 let currentValue = 0;
 
 hamburger.addEventListener('click', () => {
@@ -231,6 +231,7 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
+  localStorage.setItem('monthlyGoal', monthlyGoal);
   const target = dailyTarget();
   updateProgress(currentValue, getColor(currentValue, target));
   updateCounter();
@@ -249,6 +250,7 @@ goalLabel.addEventListener('blur', () => {
   } else {
     updateGoalDisplay();
   }
+  localStorage.setItem('monthlyGoal', monthlyGoal);
 });
 
 syncProgressWidth();
