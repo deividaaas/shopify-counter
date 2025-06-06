@@ -58,6 +58,12 @@ body {
   #slider-container {
     margin-top: 20px;
   }
+  #goal-input {
+    width: 120px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5vw;
+    margin-left: 10px;
+  }
 </style>
 </head>
 <body>
@@ -73,12 +79,14 @@ body {
   </div>
   <div id="slider-container">
     <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
+    <input type="number" id="goal-input" min="100000" max="1000000" step="1000">
     <div id="goal-label"></div>
   </div>
 </div>
 <script>
 const slider = document.getElementById('goal-slider');
 const goalLabel = document.getElementById('goal-label');
+const goalInput = document.getElementById('goal-input');
 const progressBar = document.getElementById('progress-bar');
 const progressContainer = document.getElementById('progress-container');
 const progressSales = document.getElementById('sales-value');
@@ -95,6 +103,7 @@ function dailyTarget() {
 
 function updateGoalDisplay() {
   goalLabel.textContent = 'Monthly goal: ' + monthlyGoal.toLocaleString();
+  goalInput.value = monthlyGoal;
 }
 
 function updateTargetDisplay(target) {
@@ -172,6 +181,7 @@ async function updateCounter() {
 }
 
 slider.value = monthlyGoal;
+goalInput.value = monthlyGoal;
 updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
@@ -179,6 +189,18 @@ slider.addEventListener('input', () => {
   const target = dailyTarget();
   updateProgress(currentValue);
   updateCounter();
+});
+
+goalInput.addEventListener('change', () => {
+  const value = Number(goalInput.value);
+  if (!isNaN(value)) {
+    monthlyGoal = value;
+    slider.value = value;
+    updateGoalDisplay();
+    const target = dailyTarget();
+    updateProgress(currentValue);
+    updateCounter();
+  }
 });
 
 syncProgressWidth();
