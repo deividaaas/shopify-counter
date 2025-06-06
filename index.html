@@ -27,6 +27,15 @@ body {
   font-size: 5vw;
   color: #0f0;
 }
+
+#controls {
+  margin-top: 1rem;
+}
+
+#goalLabel {
+  font-size: 2vw;
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -34,14 +43,31 @@ body {
   <div id="counter">0</div>
   <div id="target"></div>
 </div>
+<div id="controls">
+  <input type="range" id="goalSlider" min="100000" max="1000000" step="10000" value="500000">
+  <div id="goalLabel"></div>
+</div>
 <script>
-const MONTHLY_GOAL = 500000;
+let monthlyGoal = 500000;
 let currentValue = 0;
+const slider = document.getElementById('goalSlider');
+const goalLabel = document.getElementById('goalLabel');
+
+function updateGoalDisplay() {
+  goalLabel.textContent = monthlyGoal.toLocaleString();
+  slider.value = monthlyGoal;
+}
+
+slider.addEventListener('input', () => {
+  monthlyGoal = Number(slider.value);
+  updateGoalDisplay();
+  updateCounter();
+});
 
 function dailyTarget() {
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  return (MONTHLY_GOAL / daysInMonth) * now.getDate();
+  return (monthlyGoal / daysInMonth) * now.getDate();
 }
 
 function updateTargetDisplay(value) {
@@ -93,6 +119,7 @@ async function updateCounter() {
   }
 }
 
+updateGoalDisplay();
 updateCounter();
 setInterval(updateCounter, 5000);
 </script>
