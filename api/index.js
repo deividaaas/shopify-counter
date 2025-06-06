@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 
 const URL_1 = "https://smiirl-shopify.herokuapp.com/c/096a519a-f432-48da-beb2-c0ae6438e9e1";
 const URL_2 = "https://smiirl-shopify.herokuapp.com/c/7e429d3d-726a-44c8-9cae-b4dbe8e3f9bd";
