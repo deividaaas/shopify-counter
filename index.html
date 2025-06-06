@@ -113,10 +113,10 @@ function updateTargetDisplay(target) {
   document.getElementById('target').textContent = target.toLocaleString();
 }
 
-function updateProgress(value) {
+function updateProgress(value, color = getColor(value, dailyTarget())) {
   const percent = Math.min(value / monthlyGoal, 1) * 100;
   progressBar.style.width = percent + '%';
-  progressBar.style.backgroundColor = getColor(value, monthlyGoal);
+  progressBar.style.backgroundColor = color;
   progressSales.textContent = Math.round(value).toLocaleString();
   const remaining = Math.max(monthlyGoal - value, 0);
   progressRemaining.textContent = remaining.toLocaleString();
@@ -156,8 +156,9 @@ function animateCounter(endValue, target) {
     const progress = Math.min((now - startTime) / duration, 1);
     const value = Math.floor(start + (endValue - start) * progress);
     element.textContent = value.toLocaleString();
-    element.style.color = getColor(value, target);
-    updateProgress(value);
+    const color = getColor(value, target);
+    element.style.color = color;
+    updateProgress(value, color);
     if (progress < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -166,7 +167,8 @@ function animateCounter(endValue, target) {
 async function updateCounter() {
   const target = dailyTarget();
   updateTargetDisplay(target);
-  updateProgress(currentValue);
+  const currentColor = getColor(currentValue, target);
+  updateProgress(currentValue, currentColor);
   try {
     const res = await fetch('/api');
     const data = await res.json();
@@ -175,8 +177,9 @@ async function updateCounter() {
       animateCounter(value, target);
       currentValue = value;
     } else {
-      document.getElementById('counter').style.color = getColor(value, target);
-      updateProgress(value);
+      const color = getColor(value, target);
+      document.getElementById('counter').style.color = color;
+      updateProgress(value, color);
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
@@ -190,7 +193,7 @@ slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
   const target = dailyTarget();
-  updateProgress(currentValue);
+  updateProgress(currentValue, getColor(currentValue, target));
   updateCounter();
 });
 
@@ -202,7 +205,7 @@ goalLabel.addEventListener('blur', () => {
     slider.value = value;
     updateGoalDisplay();
     const target = dailyTarget();
-    updateProgress(currentValue);
+    updateProgress(currentValue, getColor(currentValue, target));
     updateCounter();
   } else {
     updateGoalDisplay();
