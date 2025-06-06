@@ -5,6 +5,11 @@ const URL_2 = process.env.URL_2 ||
     'https://smiirl-shopify.herokuapp.com/c/7e429d3d-726a-44c8-9cae-b4dbe8e3f9bd';
 
 module.exports = async (req, res) => {
+    const requiredKey = process.env.API_KEY;
+    if (requiredKey && req.headers['x-api-key'] !== requiredKey) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
     try {
 
         // Fetch data from both Shopify counters
