@@ -56,6 +56,18 @@ body {
   border-color: #666;
   background-color: #fff;
 }
+#goals-table {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+#goals-table th,
+#goals-table td {
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+}
+#goals-table input {
+  width: 100px;
+}
 </style>
 </head>
 <body>
@@ -65,7 +77,22 @@ body {
   <a href="#">Stats</a>
   <a href="settings.html">Settings</a>
 </div>
-<h1>Settings</h1>
+<h1>Monthly goals</h1>
+<table id="goals-table">
+  <tr><th>Month</th><th>Goal</th></tr>
+  <tr><td>January 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>February 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>March 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>April 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>May 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>June 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>July 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>August 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>September 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>October 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>November 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>December 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+</table>
 <div id="slider-container">
   <label for="goal-slider">Monthly goal:</label>
   <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
