@@ -26,6 +26,7 @@
     }
     .menu li { border-bottom: 1px solid #ddd; }
     .menu li a { display: block; padding: 1em; color: #333; text-decoration: none; }
+    #progress { padding: 1em; }
     </style>
 </head>
 <body>
@@ -38,6 +39,34 @@
 </div>
 
 <h1>Shopify Counter</h1>
-<p>This site combines Shopify counters. Use the menu to add monthly goals.</p>
+<p id="progress">Loading...</p>
+
+<script>
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+async function updateProgress() {
+  const el = document.getElementById('progress');
+  try {
+    const res = await fetch('api');
+    const data = await res.json();
+    const total = data.number || 0;
+    const goals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+    const month = monthNames[new Date().getMonth()];
+    const goal = goals[month];
+    if (goal) {
+      el.textContent = `Current total for ${month}: ${total} / ${goal}`;
+    } else {
+      el.textContent = `Current total: ${total}`;
+    }
+  } catch (e) {
+    el.textContent = 'Could not load data';
+  }
+}
+
+updateProgress();
+</script>
 </body>
 </html>
