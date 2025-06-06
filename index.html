@@ -28,15 +28,22 @@ body {
     font-size: 5vw;
   }
   #progress-container {
-    width: 80%;
     height: 20px;
     background-color: #ccc;
     margin-top: 20px;
+    position: relative;
+    width: fit-content;
   }
   #progress-bar {
     height: 100%;
     width: 0%;
     background-color: #FF5733;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 3vw;
+    font-family: 'Share Tech Mono', monospace;
   }
   #slider-container {
     margin-top: 20px;
@@ -59,6 +66,8 @@ body {
 const slider = document.getElementById('goal-slider');
 const goalLabel = document.getElementById('goal-label');
 const progressBar = document.getElementById('progress-bar');
+const progressContainer = document.getElementById('progress-container');
+const counterElement = document.getElementById('counter');
 let monthlyGoal = 500000;
 let currentValue = 0;
 
@@ -80,6 +89,13 @@ function updateProgress(value, target) {
   const percent = Math.min(value / target, 1) * 100;
   progressBar.style.width = percent + '%';
   progressBar.style.backgroundColor = getColor(value, target);
+  progressBar.textContent = Math.round(value).toLocaleString() + ' / ' +
+    Math.round(target).toLocaleString();
+  syncProgressWidth();
+}
+
+function syncProgressWidth() {
+  progressContainer.style.width = counterElement.offsetWidth + 'px';
 }
 
 function getColor(value, target) {
@@ -135,8 +151,10 @@ slider.addEventListener('input', () => {
   updateCounter();
 });
 
+syncProgressWidth();
 updateCounter();
 setInterval(updateCounter, 5000);
+window.addEventListener('resize', syncProgressWidth);
 </script>
 </body>
 </html>

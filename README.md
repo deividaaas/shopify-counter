@@ -11,3 +11,5 @@ This simple project displays a counter on a web page and updates it from a serve
 4. Open `index.html` in your browser to see the counter.
 
 The page fetches `/api` every five seconds and animates the number toward the latest value.
+Below the counter a progress bar shows progress toward today's goal with the current
+sales value displayed inside the bar.
