@@ -80,18 +80,18 @@ body {
 <h1>Monthly goals</h1>
 <table id="goals-table">
   <tr><th>Month</th><th>Goal</th></tr>
-  <tr><td>January 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>February 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>March 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>April 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>May 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>June 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>July 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>August 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>September 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>October 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>November 2025</td><td><input type="text" placeholder="fill in"></td></tr>
-  <tr><td>December 2025</td><td><input type="text" placeholder="fill in"></td></tr>
+  <tr><td>January 2025</td><td><input data-key="2025-01" type="text" placeholder="fill in"></td></tr>
+  <tr><td>February 2025</td><td><input data-key="2025-02" type="text" placeholder="fill in"></td></tr>
+  <tr><td>March 2025</td><td><input data-key="2025-03" type="text" placeholder="fill in"></td></tr>
+  <tr><td>April 2025</td><td><input data-key="2025-04" type="text" placeholder="fill in"></td></tr>
+  <tr><td>May 2025</td><td><input data-key="2025-05" type="text" placeholder="fill in"></td></tr>
+  <tr><td>June 2025</td><td><input data-key="2025-06" type="text" placeholder="fill in"></td></tr>
+  <tr><td>July 2025</td><td><input data-key="2025-07" type="text" placeholder="fill in"></td></tr>
+  <tr><td>August 2025</td><td><input data-key="2025-08" type="text" placeholder="fill in"></td></tr>
+  <tr><td>September 2025</td><td><input data-key="2025-09" type="text" placeholder="fill in"></td></tr>
+  <tr><td>October 2025</td><td><input data-key="2025-10" type="text" placeholder="fill in"></td></tr>
+  <tr><td>November 2025</td><td><input data-key="2025-11" type="text" placeholder="fill in"></td></tr>
+  <tr><td>December 2025</td><td><input data-key="2025-12" type="text" placeholder="fill in"></td></tr>
 </table>
 <div id="slider-container">
   <label for="goal-slider">Monthly goal:</label>
@@ -104,7 +104,10 @@ const goalLabel = document.getElementById('goal-label');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 
-let monthlyGoal = Number(localStorage.getItem('monthlyGoal')) || 500000;
+const now = new Date();
+const monthKey = now.toISOString().slice(0,7);
+const monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+let monthlyGoal = Number(monthlyGoals[monthKey]) || 500000;
 
 function updateGoalDisplay() {
   goalLabel.textContent = monthlyGoal.toLocaleString();
@@ -120,7 +123,8 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
-  localStorage.setItem('monthlyGoal', monthlyGoal);
+  monthlyGoals[monthKey] = monthlyGoal;
+  localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
 
 goalLabel.addEventListener('blur', () => {
@@ -131,7 +135,31 @@ goalLabel.addEventListener('blur', () => {
     slider.value = value;
   }
   updateGoalDisplay();
-  localStorage.setItem('monthlyGoal', monthlyGoal);
+  monthlyGoals[monthKey] = monthlyGoal;
+  localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
+});
+
+document.querySelectorAll('#goals-table input').forEach(input => {
+  const key = input.dataset.key;
+  if (monthlyGoals[key]) {
+    input.value = monthlyGoals[key].toLocaleString();
+  }
+  input.addEventListener('blur', () => {
+    const digits = input.value.replace(/[^0-9]/g, '');
+    const val = Number(digits);
+    if (!isNaN(val) && val >= 100000 && val <= 1000000) {
+      monthlyGoals[key] = val;
+      if (key === monthKey) {
+        monthlyGoal = val;
+        slider.value = val;
+        updateGoalDisplay();
+      }
+      input.value = val.toLocaleString();
+    } else {
+      input.value = monthlyGoals[key] ? monthlyGoals[key].toLocaleString() : '';
+    }
+    localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
+  });
 });
 </script>
 </body>

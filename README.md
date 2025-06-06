@@ -17,4 +17,4 @@ editing the number next to it. The progress bar changes color along with the cou
 
 The page now includes a small hamburger menu in the top-right corner for quick navigation links.
 Use the **Settings** link in that menu to open a page with a table for recording monthly goals for the year.
-The slider used to tweak the current goal remains on `index.html` only, but the value is stored in `localStorage` so both pages share it.
+Each month's goal is stored separately in `localStorage`. When the month changes the counter page reads the goal for that month so the values persist without a backend.

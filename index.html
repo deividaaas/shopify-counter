@@ -131,7 +131,10 @@ const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
-let monthlyGoal = Number(localStorage.getItem('monthlyGoal')) || 500000;
+const now = new Date();
+const monthKey = now.toISOString().slice(0,7);
+const monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+let monthlyGoal = Number(monthlyGoals[monthKey]) || 500000;
 let currentValue = 0;
 
 hamburger.addEventListener('click', () => {
@@ -231,7 +234,8 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
-  localStorage.setItem('monthlyGoal', monthlyGoal);
+  monthlyGoals[monthKey] = monthlyGoal;
+  localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
   const target = dailyTarget();
   updateProgress(currentValue, getColor(currentValue, target));
   updateCounter();
@@ -250,7 +254,8 @@ goalLabel.addEventListener('blur', () => {
   } else {
     updateGoalDisplay();
   }
-  localStorage.setItem('monthlyGoal', monthlyGoal);
+  monthlyGoals[monthKey] = monthlyGoal;
+  localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
 
 syncProgressWidth();
