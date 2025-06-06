@@ -16,5 +16,5 @@ sales value displayed inside the bar. Adjust the monthly goal using the slider o
 editing the number next to it. The progress bar changes color along with the counter to reflect progress.
 
 The page now includes a small hamburger menu in the top-right corner for quick navigation links.
-Use the **Settings** link in that menu to open a dedicated page where you can adjust the monthly goal.
-The value is stored in `localStorage` so both pages share the same goal.
+Use the **Settings** link in that menu to open a page with a table for recording monthly goals for the year.
+The slider used to tweak the current goal remains on `index.html` only, but the value is stored in `localStorage` so both pages share it.
