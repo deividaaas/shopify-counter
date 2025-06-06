@@ -28,11 +28,28 @@ async function updateCounter() {
   try {
     const res = await fetch('/api');
     const data = await res.json();
-    document.getElementById('counter').textContent = data.number ?? '0';
+    animateCounter(data.number ?? 0);
   } catch (err) {
     console.error('Failed to fetch counter:', err);
   }
 }
+
+function animateCounter(target) {
+  const element = document.getElementById('counter');
+  const start = parseInt(element.textContent.replace(/,/g, ''), 10) || 0;
+  const duration = 1000;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const value = Math.floor(start + (target - start) * progress);
+    element.textContent = value.toLocaleString();
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
 updateCounter();
 setInterval(updateCounter, 5000);
 </script>
