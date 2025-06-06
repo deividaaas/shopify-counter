@@ -56,6 +56,9 @@ const goalLabel = document.getElementById('goalLabel');
 function updateGoalDisplay() {
   goalLabel.textContent = monthlyGoal.toLocaleString();
   slider.value = monthlyGoal;
+  const target = dailyTarget();
+  updateTargetDisplay(target);
+  document.getElementById('counter').style.color = getColor(currentValue, target);
 }
 
 slider.addEventListener('input', () => {
