@@ -8,12 +8,16 @@
 body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
-  background-color: #dedede;
+  padding-top: 60px;
+  background: linear-gradient(#eee, #ccc);
   font-family: 'Share Tech Mono', monospace;
+}
+#main-title {
+  margin-top: 0;
+  font-size: 2.5em;
 }
 #hamburger {
   position: absolute;
@@ -42,31 +46,31 @@ body {
   color: #333;
   margin: 5px 0;
 }
-#slider-container {
-  margin-top: 20px;
-}
-#goal-label[contenteditable] {
-  display: inline-block;
-  min-width: 6ch;
-  padding: 2px 4px;
-  border: 1px dashed transparent;
-}
-#goal-label[contenteditable]:focus {
-  outline: none;
-  border-color: #666;
-  background-color: #fff;
-}
 #goals-table {
   border-collapse: collapse;
   margin-top: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 #goals-table th,
 #goals-table td {
-  border: 1px solid #ccc;
-  padding: 4px 8px;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 12px;
+}
+#goals-table th {
+  background-color: #f0f0f0;
+  text-align: left;
+}
+#goals-table tr:last-child td {
+  border-bottom: none;
 }
 #goals-table input {
   width: 100px;
+  padding: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 </style>
 </head>
@@ -77,7 +81,7 @@ body {
   <a href="#">Stats</a>
   <a href="settings.html">Settings</a>
 </div>
-<h1>Monthly goals</h1>
+<h1 id="main-title">Monthly goals</h1>
 <table id="goals-table">
   <tr><th>Month</th><th>Goal</th></tr>
   <tr><td>January 2025</td><td><input type="text" placeholder="fill in"></td></tr>
@@ -93,45 +97,12 @@ body {
   <tr><td>November 2025</td><td><input type="text" placeholder="fill in"></td></tr>
   <tr><td>December 2025</td><td><input type="text" placeholder="fill in"></td></tr>
 </table>
-<div id="slider-container">
-  <label for="goal-slider">Monthly goal:</label>
-  <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
-  <span id="goal-label" contenteditable="true"></span>
-</div>
 <script>
-const slider = document.getElementById('goal-slider');
-const goalLabel = document.getElementById('goal-label');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 
-let monthlyGoal = Number(localStorage.getItem('monthlyGoal')) || 500000;
-
-function updateGoalDisplay() {
-  goalLabel.textContent = monthlyGoal.toLocaleString();
-}
-
 hamburger.addEventListener('click', () => {
   navMenu.classList.toggle('open');
-});
-
-slider.value = monthlyGoal;
-updateGoalDisplay();
-
-slider.addEventListener('input', () => {
-  monthlyGoal = Number(slider.value);
-  updateGoalDisplay();
-  localStorage.setItem('monthlyGoal', monthlyGoal);
-});
-
-goalLabel.addEventListener('blur', () => {
-  const digits = goalLabel.textContent.replace(/[^0-9]/g, '');
-  const value = Number(digits);
-  if (!isNaN(value) && value >= 100000 && value <= 1000000) {
-    monthlyGoal = value;
-    slider.value = value;
-  }
-  updateGoalDisplay();
-  localStorage.setItem('monthlyGoal', monthlyGoal);
 });
 </script>
 </body>
