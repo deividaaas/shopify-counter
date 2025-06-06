@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shopify Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #dedede;
+  font-family: 'Share Tech Mono', monospace;
+}
+#wrapper {
+  text-align: center;
+}
+#counter {
+  font-size: 20vw;
+  line-height: 1;
+  width: 100%;
+  color: #FF5733;
+}
+  #target {
+    font-size: 5vw;
+  }
+  #progress-container {
+    position: relative;
+    height: 25px;
+    background-color: #ccc;
+    margin-top: 20px;
+    width: fit-content;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  #progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background-color: #FF5733;
+    z-index: 0;
+  }
+  #progress-text {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 6px;
+    font-size: 2vw;
+    color: #000;
+  }
+  #slider-container {
+    margin-top: 20px;
+  }
+  #goal-label[contenteditable] {
+    display: inline-block;
+    min-width: 6ch;
+    padding: 2px 4px;
+    border: 1px dashed transparent;
+  }
+  #goal-label[contenteditable]:focus {
+    outline: none;
+    border-color: #666;
+    background-color: #fff;
+  }
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <div id="counter">0</div>
+  <div id="target"></div>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+    <div id="progress-text">
+      <span id="sales-value"></span>
+      <span id="remaining-value"></span>
+    </div>
+  </div>
+  <div id="slider-container">
+    <label for="goal-slider">Monthly goal:</label>
+    <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
+    <span id="goal-label" contenteditable="true"></span>
+  </div>
+</div>
+<script>
+const slider = document.getElementById('goal-slider');
+const goalLabel = document.getElementById('goal-label');
+const progressBar = document.getElementById('progress-bar');
+const progressContainer = document.getElementById('progress-container');
+const progressSales = document.getElementById('sales-value');
+const progressRemaining = document.getElementById('remaining-value');
+const counterElement = document.getElementById('counter');
+let monthlyGoal = 500000;
+let currentValue = 0;
+
+function dailyTarget() {
+  const now = new Date();
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return (monthlyGoal / days) * now.getDate();
+}
+
+function updateGoalDisplay() {
+  goalLabel.textContent = monthlyGoal.toLocaleString();
+}
+
+function updateTargetDisplay(target) {
+  document.getElementById('target').textContent = target.toLocaleString();
+}
+
+function updateProgress(value, color = getColor(value, dailyTarget())) {
+  const percent = Math.min(value / monthlyGoal, 1) * 100;
+  progressBar.style.width = percent + '%';
+  progressBar.style.backgroundColor = color;
+  progressSales.textContent = Math.round(value).toLocaleString();
+  const remaining = Math.max(monthlyGoal - value, 0);
+  progressRemaining.textContent = remaining.toLocaleString();
+  syncProgressWidth();
+}
+
+function measureSixDigitWidth() {
+  const span = document.createElement('span');
+  span.textContent = '888,888';
+  span.style.position = 'absolute';
+  span.style.visibility = 'hidden';
+  span.style.fontFamily = window.getComputedStyle(counterElement).fontFamily;
+  span.style.fontSize = window.getComputedStyle(counterElement).fontSize;
+  document.body.appendChild(span);
+  const width = span.offsetWidth;
+  document.body.removeChild(span);
+  return width;
+}
+
+function syncProgressWidth() {
+  progressContainer.style.width = measureSixDigitWidth() + 'px';
+}
+
+function getColor(value, target) {
+  if (value >= target * 1.1) return '#28a745';
+  if (value >= target * 0.9) return '#FFC300';
+  return '#FF5733';
+}
+
+function animateCounter(endValue, target) {
+  const element = document.getElementById('counter');
+  const start = parseInt(element.textContent.replace(/,/g, ''), 10) || 0;
+  const duration = 2000;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const value = Math.floor(start + (endValue - start) * progress);
+    element.textContent = value.toLocaleString();
+    const color = getColor(value, target);
+    element.style.color = color;
+    updateProgress(value, color);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+async function updateCounter() {
+  const target = dailyTarget();
+  updateTargetDisplay(target);
+  const currentColor = getColor(currentValue, target);
+  updateProgress(currentValue, currentColor);
+  try {
+    const res = await fetch('/api');
+    const data = await res.json();
+    const value = data.number ?? 0;
+    if (value !== currentValue) {
+      animateCounter(value, target);
+      currentValue = value;
+    } else {
+      const color = getColor(value, target);
+      document.getElementById('counter').style.color = color;
+      updateProgress(value, color);
+    }
+  } catch (err) {
+    console.error('Failed to fetch counter:', err);
+  }
+}
+
+slider.value = monthlyGoal;
+updateGoalDisplay();
+
+slider.addEventListener('input', () => {
+  monthlyGoal = Number(slider.value);
+  updateGoalDisplay();
+  const target = dailyTarget();
+  updateProgress(currentValue, getColor(currentValue, target));
+  updateCounter();
+});
+
+goalLabel.addEventListener('blur', () => {
+  const digits = goalLabel.textContent.replace(/[^0-9]/g, '');
+  const value = Number(digits);
+  if (!isNaN(value) && value >= 100000 && value <= 1000000) {
+    monthlyGoal = value;
+    slider.value = value;
+    updateGoalDisplay();
+    const target = dailyTarget();
+    updateProgress(currentValue, getColor(currentValue, target));
+    updateCounter();
+  } else {
+    updateGoalDisplay();
+  }
+});
+
+syncProgressWidth();
+updateCounter();
+setInterval(updateCounter, 5000);
+window.addEventListener('resize', syncProgressWidth);
+</script>
+</body>
+</html>
