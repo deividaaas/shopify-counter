@@ -11,8 +11,10 @@ module.exports = async (req, res) => {
             fetch(URL_2).then(res => res.json())
         ]);
 
-        // Combine the numbers
-        const total = (data1.number || 0) + (data2.number || 0);
+        // Combine the numbers, ensuring numeric addition
+        const count1 = parseInt(data1.number, 10) || 0;
+        const count2 = parseInt(data2.number, 10) || 0;
+        const total = count1 + count2;
 
         // Return the combined JSON for Smiirl
         res.json({ number: total });
