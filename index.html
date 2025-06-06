@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Shopify Counter</title>
+    <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    .menu { position: relative; }
+    .menu input[type=checkbox] { display: none; }
+    .menu label {
+        display: block;
+        padding: 1em;
+        background: #333;
+        color: white;
+        cursor: pointer;
+    }
+    .menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        background: #eee;
+        display: none;
+    }
+    .menu input[type=checkbox]:checked ~ ul {
+        display: block;
+    }
+    .menu li { border-bottom: 1px solid #ddd; }
+    .menu li a { display: block; padding: 1em; color: #333; text-decoration: none; }
+    #progress { padding: 1em; }
+    </style>
+</head>
+<body>
+<div class="menu">
+  <input type="checkbox" id="toggle-menu">
+  <label for="toggle-menu">&#9776; Menu</label>
+  <ul>
+    <li><a href="goal.html">Add Monthly Goal</a></li>
+  </ul>
+</div>
+
+<h1>Shopify Counter</h1>
+<p id="progress">Loading...</p>
+
+<script>
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+async function updateProgress() {
+  const el = document.getElementById('progress');
+  try {
+    const res = await fetch('api');
+    const data = await res.json();
+    const total = data.number || 0;
+    const goals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+    const month = monthNames[new Date().getMonth()];
+    const goal = goals[month];
+    if (goal) {
+      el.textContent = `Current total for ${month}: ${total} / ${goal}`;
+    } else {
+      el.textContent = `Current total: ${total}`;
+    }
+  } catch (e) {
+    el.textContent = 'Could not load data';
+  }
+}
+
+updateProgress();
+</script>
+</body>
+</html>
