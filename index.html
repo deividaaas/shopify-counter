@@ -132,8 +132,11 @@ const counterElement = document.getElementById('counter');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 const now = new Date();
+// Use a YYYY-MM key so each month can store a separate goal
 const monthKey = now.toISOString().slice(0,7);
+// Load any previously saved goals from localStorage
 const monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals') || '{}');
+// Default to 500k if there's no entry for this month yet
 let monthlyGoal = Number(monthlyGoals[monthKey]) || 500000;
 let currentValue = 0;
 
@@ -234,6 +237,7 @@ updateGoalDisplay();
 slider.addEventListener('input', () => {
   monthlyGoal = Number(slider.value);
   updateGoalDisplay();
+  // Persist the value so the next visit shows the same goal
   monthlyGoals[monthKey] = monthlyGoal;
   localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
   const target = dailyTarget();
@@ -254,6 +258,7 @@ goalLabel.addEventListener('blur', () => {
   } else {
     updateGoalDisplay();
   }
+  // Store the edited goal when leaving the field
   monthlyGoals[monthKey] = monthlyGoal;
   localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
