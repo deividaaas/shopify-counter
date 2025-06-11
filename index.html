@@ -141,17 +141,6 @@ const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 const api1Box = document.getElementById('api1');
 const api2Box = document.getElementById('api2');
-// Migrate old counterUrl1/counterUrl2 values into a single array
-let apis = JSON.parse(localStorage.getItem('counterApis') || '[]');
-if (!apis.length) {
-  const old1 = localStorage.getItem('counterUrl1');
-  const old2 = localStorage.getItem('counterUrl2');
-  if (old1) apis[0] = old1;
-  if (old2) apis[1] = old2;
-  localStorage.setItem('counterApis', JSON.stringify(apis));
-  localStorage.removeItem('counterUrl1');
-  localStorage.removeItem('counterUrl2');
-}
 // Restore previous checkbox states
 api1Box.checked = JSON.parse(localStorage.getItem('api1Checked') ?? 'true');
 api2Box.checked = JSON.parse(localStorage.getItem('api2Checked') ?? 'true');
@@ -245,8 +234,8 @@ async function updateCounter() {
     if (include1 && !include2) params.set('source', '1');
     else if (!include1 && include2) params.set('source', '2');
     else if (!include1 && !include2) params.set('source', 'none');
-    const url1 = apis[0];
-    const url2 = apis[1];
+    const url1 = localStorage.getItem('counterUrl1');
+    const url2 = localStorage.getItem('counterUrl2');
     if (url1) params.set('url1', url1);
     if (url2) params.set('url2', url2);
     const query = params.toString();
