@@ -16,19 +16,23 @@ module.exports = async (req, res) => {
     const include1 = !source || source === 'both' || source === '1';
     const include2 = !source || source === 'both' || source === '2';
 
-    // Allow overriding URLs via query parameters when provided and valid
-    const url1 = req.query?.url1 && /^https?:\/\//.test(req.query.url1)
-        ? req.query.url1
-        : URL_1;
-    const url2 = req.query?.url2 && /^https?:\/\//.test(req.query.url2)
-        ? req.query.url2
-        : URL_2;
+    // Build list of URLs to fetch, using query params when valid
+    const urls = [];
+    if (include1) {
+        const u = req.query?.url1 && /^https?:\/\//.test(req.query.url1)
+            ? req.query.url1
+            : URL_1;
+        urls.push(u);
+    }
+    if (include2) {
+        const u = req.query?.url2 && /^https?:\/\//.test(req.query.url2)
+            ? req.query.url2
+            : URL_2;
+        urls.push(u);
+    }
 
     try {
-        const fetches = [];
-        if (include1) fetches.push(fetch(url1).then(res => res.json()));
-        if (include2) fetches.push(fetch(url2).then(res => res.json()));
-
+        const fetches = urls.map(u => fetch(u).then(r => r.json()));
         const results = await Promise.all(fetches);
         const total = results.reduce((sum, d) => sum + (d.number || 0), 0);
 
