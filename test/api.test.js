@@ -77,6 +77,22 @@ test('uses url query parameters when provided', async () => {
   global.fetch = originalFetch;
 });
 
+test('combines numbers from multiple url params', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 1 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { url: ['https://a.com', 'https://b.com', 'https://c.com'] } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(urls, ['https://a.com', 'https://b.com', 'https://c.com']);
+  assert.deepStrictEqual(res.body, { number: 3 });
+  global.fetch = originalFetch;
+});
+
 test('returns 0 when source=none', async () => {
   const originalFetch = global.fetch;
   let calls = 0;
