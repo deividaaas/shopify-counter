@@ -9,11 +9,11 @@ This simple project displays a counter on a web page and updates it from a serve
    Defaults are included for testing.
 3. Start the development server with `vercel dev`.
 4. Open `index.html` in your browser to see the counter.
-5. The **Settings** page lets you define any number of custom counter endpoints.
-   Each entry has a name and a URL and the list is saved in `localStorage` under
-   `counterApis`. These names appear on the home page where you can toggle each
-   API on or off. When no custom endpoints exist, the page falls back to the two
-   environment URLs and still lets you disable either one individually.
+5. The **Settings** page allows you to override the two default counter URLs.
+   Enter values for `URL_1` and `URL_2` and they will be stored in
+   `localStorage` as `counterUrl1` and `counterUrl2`. The home page still shows
+   checkboxes for "API 1" and "API 2" so you can disable either endpoint even
+   when using custom URLs.
 
 The page fetches `/api` every five seconds and animates the number toward the latest value.
 Below the counter a progress bar shows progress toward today's goal with the current
