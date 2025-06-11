@@ -144,12 +144,7 @@ if (!apis.length && (old1 || old2)) {
   if (old1) apis.push({ name: 'API 1', url: old1, enabled: true });
   if (old2) apis.push({ name: 'API 2', url: old2, enabled: true });
 }
-if (!apis.length) {
-  apis = [
-    { name: 'API 1', url: '', enabled: true },
-    { name: 'API 2', url: '', enabled: true }
-  ];
-}
+// If no endpoints were saved the server defaults will be used
 
 function renderApiControls() {
   apiControls.innerHTML = '';
@@ -255,12 +250,8 @@ async function updateCounter() {
   updateProgress(currentValue, currentColor);
   try {
     const params = new URLSearchParams();
-    const urls = apis.filter(a => a.enabled && a.url).map(a => a.url);
-    if (urls.length) {
-      urls.forEach(u => params.append('url', u));
-    } else {
-      params.set('source', 'none');
-    }
+    apis.filter(a => a.enabled && a.url)
+        .forEach(u => params.append('url', u.url));
     const query = params.toString();
     const res = await fetch('/api' + (query ? '?' + query : ''));
     const data = await res.json();
