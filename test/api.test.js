@@ -103,3 +103,19 @@ test('falls back to default url when url1 is invalid', async () => {
   assert.deepStrictEqual(res.body, { number: 1 });
   global.fetch = originalFetch;
 });
+
+test('uses custom url1 when source=1', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 9 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { source: '1', url1: 'https://custom.com' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(urls, ['https://custom.com']);
+  assert.deepStrictEqual(res.body, { number: 9 });
+  global.fetch = originalFetch;
+});
