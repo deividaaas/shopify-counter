@@ -9,6 +9,10 @@ This simple project displays a counter on a web page and updates it from a serve
    Defaults are included for testing.
 3. Start the development server with `vercel dev`.
 4. Open `index.html` in your browser to see the counter.
+5. The **Settings** page lets you define any number of custom counter endpoints.
+   Each entry has a name and a URL and the list is saved in `localStorage` under
+   `counterApis`. The names appear on the home page where you can toggle each API
+   on or off.
 
 The page fetches `/api` every five seconds and animates the number toward the latest value.
 Below the counter a progress bar shows progress toward today's goal with the current
