@@ -77,6 +77,10 @@ body {
   <a href="#">Stats</a>
   <a href="settings.html">Settings</a>
 </div>
+<div id="api-url-container">
+  <label>Counter URL 1: <input type="text" id="url1"></label><br>
+  <label>Counter URL 2: <input type="text" id="url2"></label>
+</div>
 <h1>Monthly goals</h1>
 <table id="goals-table">
   <tr><th>Month</th><th>Goal</th></tr>
@@ -104,6 +108,12 @@ const goalLabel = document.getElementById('goal-label');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 
+const url1Input = document.getElementById("url1");
+const url2Input = document.getElementById("url2");
+url1Input.value = localStorage.getItem("counterUrl1") || "";
+url2Input.value = localStorage.getItem("counterUrl2") || "";
+url1Input.addEventListener("blur", () => localStorage.setItem("counterUrl1", url1Input.value.trim()));
+url2Input.addEventListener("blur", () => localStorage.setItem("counterUrl2", url2Input.value.trim()));
 const now = new Date();
 // Use the same YYYY-MM key as the main page
 const monthKey = now.toISOString().slice(0,7);
