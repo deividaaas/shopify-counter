@@ -28,3 +28,35 @@ test('combines values from both counters', async () => {
   assert.strictEqual(call, 2);
   global.fetch = originalFetch;
 });
+
+test('fetches only first counter when source=1', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 5 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { source: '1' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(res.body, { number: 5 });
+  assert.strictEqual(urls.length, 1);
+  global.fetch = originalFetch;
+});
+
+test('fetches only second counter when source=2', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 7 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { source: '2' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(res.body, { number: 7 });
+  assert.strictEqual(urls.length, 1);
+  global.fetch = originalFetch;
+});
