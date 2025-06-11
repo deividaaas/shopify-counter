@@ -15,3 +15,16 @@ test('returns 401 when api key is missing', async () => {
   await handler(req, res);
   assert.strictEqual(statusCode, 401);
 });
+
+test('combines values from both counters', async () => {
+  const originalFetch = global.fetch;
+  let call = 0;
+  global.fetch = async () => ({ json: async () => ({ number: ++call }) });
+  process.env.API_KEY = '';
+  const req = { headers: {} };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(res.body, { number: 3 });
+  assert.strictEqual(call, 2);
+  global.fetch = originalFetch;
+});
