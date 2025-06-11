@@ -60,3 +60,19 @@ test('fetches only second counter when source=2', async () => {
   assert.strictEqual(urls.length, 1);
   global.fetch = originalFetch;
 });
+
+test('uses url query parameters when provided', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 2 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { url1: 'https://a.com', url2: 'https://b.com' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(urls, ['https://a.com', 'https://b.com']);
+  assert.deepStrictEqual(res.body, { number: 4 });
+  global.fetch = originalFetch;
+});
