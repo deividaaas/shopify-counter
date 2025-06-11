@@ -82,6 +82,10 @@ body {
     font-size: 2vw;
     color: #000;
   }
+  #api-controls {
+    margin-top: 10px;
+    font-size: 1.2vw;
+  }
   #slider-container {
     margin-top: 20px;
   }
@@ -115,6 +119,10 @@ body {
       <span id="remaining-value"></span>
     </div>
   </div>
+  <div id="api-controls">
+    <label><input type="checkbox" id="api1" checked> API 1</label>
+    <label><input type="checkbox" id="api2" checked> API 2</label>
+  </div>
   <div id="slider-container">
     <label for="goal-slider">Monthly goal:</label>
     <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
@@ -131,6 +139,8 @@ const progressRemaining = document.getElementById('remaining-value');
 const counterElement = document.getElementById('counter');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
+const api1Box = document.getElementById('api1');
+const api2Box = document.getElementById('api2');
 const now = new Date();
 // Use a YYYY-MM key so each month can store a separate goal
 const monthKey = now.toISOString().slice(0,7);
@@ -215,7 +225,13 @@ async function updateCounter() {
   const currentColor = getColor(currentValue, target);
   updateProgress(currentValue, currentColor);
   try {
-    const res = await fetch('/api');
+    let query = '';
+    const include1 = api1Box.checked;
+    const include2 = api2Box.checked;
+    if (include1 && !include2) query = '?source=1';
+    else if (!include1 && include2) query = '?source=2';
+    else if (!include1 && !include2) query = '?source=none';
+    const res = await fetch('/api' + query);
     const data = await res.json();
     const value = data.number ?? 0;
     if (value !== currentValue) {
@@ -244,6 +260,9 @@ slider.addEventListener('input', () => {
   updateProgress(currentValue, getColor(currentValue, target));
   updateCounter();
 });
+
+api1Box.addEventListener('change', updateCounter);
+api2Box.addEventListener('change', updateCounter);
 
 goalLabel.addEventListener('blur', () => {
   const digits = goalLabel.textContent.replace(/[^0-9]/g, '');

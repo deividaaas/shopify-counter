@@ -10,18 +10,20 @@ module.exports = async (req, res) => {
         res.status(401).json({ error: 'Unauthorized' });
         return;
     }
+
+    // Determine which sources to include based on query parameter
+    const source = req.query?.source;
+    const include1 = !source || source === 'both' || source === '1';
+    const include2 = !source || source === 'both' || source === '2';
+
     try {
+        const fetches = [];
+        if (include1) fetches.push(fetch(URL_1).then(res => res.json()));
+        if (include2) fetches.push(fetch(URL_2).then(res => res.json()));
 
-        // Fetch data from both Shopify counters
-        const [data1, data2] = await Promise.all([
-            fetch(URL_1).then(res => res.json()),
-            fetch(URL_2).then(res => res.json())
-        ]);
+        const results = await Promise.all(fetches);
+        const total = results.reduce((sum, d) => sum + (d.number || 0), 0);
 
-        // Combine the numbers
-        const total = (data1.number || 0) + (data2.number || 0);
-
-        // Return the combined JSON for Smiirl
         res.json({ number: total });
     } catch (error) {
         // If an error occurs, return 0 to avoid breaking the counter
