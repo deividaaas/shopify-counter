@@ -4,7 +4,7 @@ This simple project displays a counter on a web page and updates it from a serve
 
 ## Setup
 
-1. Install dependencies (none required besides Node 18+).
+1. Install dependencies (Node 18 or newer is required but no extra packages are needed).
 2. (Optional) Set the environment variables `URL_1` and `URL_2` with your Shopify counter endpoints.
    Defaults are included for testing.
 3. Start the development server with `vercel dev`.
