@@ -76,3 +76,30 @@ test('uses url query parameters when provided', async () => {
   assert.deepStrictEqual(res.body, { number: 4 });
   global.fetch = originalFetch;
 });
+
+test('returns 0 when source=none', async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async () => { calls++; return { json: async () => ({ number: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { source: 'none' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(res.body, { number: 0 });
+  assert.strictEqual(calls, 0);
+  global.fetch = originalFetch;
+});
+
+test('falls back to default url when url1 is invalid', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => { urls.push(url); return { json: async () => ({ number: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { source: '1', url1: 'ftp://bad' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.strictEqual(urls.length, 1);
+  assert.strictEqual(urls[0], 'https://smiirl-shopify.herokuapp.com/c/096a519a-f432-48da-beb2-c0ae6438e9e1');
+  assert.deepStrictEqual(res.body, { number: 1 });
+  global.fetch = originalFetch;
+});
