@@ -69,10 +69,26 @@ test('uses url query parameters when provided', async () => {
     return { json: async () => ({ number: 2 }) };
   };
   process.env.API_KEY = '';
-  const req = { headers: {}, query: { url1: 'https://a.com', url2: 'https://b.com' } };
+  const req = { headers: {}, query: { url: ['https://a.com', 'https://b.com'] } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
   assert.deepStrictEqual(urls, ['https://a.com', 'https://b.com']);
   assert.deepStrictEqual(res.body, { number: 4 });
+  global.fetch = originalFetch;
+});
+
+test('legacy url1/url2 parameters still work', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { json: async () => ({ number: 3 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { url1: 'https://x.com', url2: 'https://y.com' } };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(urls, ['https://x.com', 'https://y.com']);
+  assert.deepStrictEqual(res.body, { number: 6 });
   global.fetch = originalFetch;
 });

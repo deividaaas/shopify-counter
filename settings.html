@@ -77,10 +77,12 @@ body {
   <a href="#">Stats</a>
   <a href="settings.html">Settings</a>
 </div>
-<div id="api-url-container">
-  <label>Counter URL 1: <input type="text" id="url1"></label><br>
-  <label>Counter URL 2: <input type="text" id="url2"></label>
-</div>
+<section id="api-section">
+  <h2>API endpoints</h2>
+  <div id="api-list"></div>
+  <button id="add-api">+ Add API</button>
+  <button id="save-apis">OK</button>
+</section>
 <h1>Monthly goals</h1>
 <table id="goals-table">
   <tr><th>Month</th><th>Goal</th></tr>
@@ -108,12 +110,55 @@ const goalLabel = document.getElementById('goal-label');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 
-const url1Input = document.getElementById("url1");
-const url2Input = document.getElementById("url2");
-url1Input.value = localStorage.getItem("counterUrl1") || "";
-url2Input.value = localStorage.getItem("counterUrl2") || "";
-url1Input.addEventListener("blur", () => localStorage.setItem("counterUrl1", url1Input.value.trim()));
-url2Input.addEventListener("blur", () => localStorage.setItem("counterUrl2", url2Input.value.trim()));
+const apiList = document.getElementById('api-list');
+const addApiBtn = document.getElementById('add-api');
+const saveApisBtn = document.getElementById('save-apis');
+let apis = JSON.parse(localStorage.getItem('counterApis') || '[]');
+
+if (!apis.length) {
+  const old1 = localStorage.getItem('counterUrl1');
+  const old2 = localStorage.getItem('counterUrl2');
+  if (old1) apis.push({ name: 'API 1', url: old1 });
+  if (old2) apis.push({ name: 'API 2', url: old2 });
+}
+if (!apis.length) apis = [{ name: 'API 1', url: '' }, { name: 'API 2', url: '' }];
+
+function renderApiList() {
+  apiList.innerHTML = '';
+  apis.forEach((api, idx) => {
+    const div = document.createElement('div');
+    div.innerHTML = `<input class="api-url" placeholder="URL" type="text"> ` +
+                    `<input class="api-name" placeholder="Name" type="text"> ` +
+                    `<button class="remove-api">x</button>`;
+    const urlInput = div.querySelector('.api-url');
+    const nameInput = div.querySelector('.api-name');
+    urlInput.value = api.url;
+    nameInput.value = api.name;
+    div.querySelector('.remove-api').addEventListener('click', () => {
+      apis.splice(idx, 1);
+      renderApiList();
+    });
+    apiList.appendChild(div);
+  });
+}
+
+addApiBtn.addEventListener('click', () => {
+  apis.push({ name: '', url: '' });
+  renderApiList();
+});
+
+saveApisBtn.addEventListener('click', () => {
+  apis = Array.from(apiList.children).map(row => ({
+    url: row.querySelector('.api-url').value.trim(),
+    name: row.querySelector('.api-name').value.trim()
+  })).filter(a => a.url);
+  localStorage.setItem('counterApis', JSON.stringify(apis));
+  localStorage.removeItem('counterUrl1');
+  localStorage.removeItem('counterUrl2');
+  renderApiList();
+});
+
+renderApiList();
 const now = new Date();
 // Use the same YYYY-MM key as the main page
 const monthKey = now.toISOString().slice(0,7);
