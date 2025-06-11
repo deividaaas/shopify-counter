@@ -11,24 +11,38 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // Determine which sources to include based on query parameter
-    const source = req.query?.source;
-    const include1 = !source || source === 'both' || source === '1';
-    const include2 = !source || source === 'both' || source === '2';
+    // If "url" query params are provided, use them directly.
+    // Supports repeated "url" parameters for multiple endpoints.
+    let urls = [];
+    if (req.query?.url) {
+        const provided = Array.isArray(req.query.url)
+            ? req.query.url
+            : [req.query.url];
+        urls = provided.filter(u => /^https?:\/\//.test(u));
+    } else {
+        // Determine which default sources to include based on query parameter
+        const source = req.query?.source;
+        const include1 = !source || source === 'both' || source === '1';
+        const include2 = !source || source === 'both' || source === '2';
 
-    // Build list of URLs to fetch, using query params when valid
-    const urls = [];
-    if (include1) {
-        const u = req.query?.url1 && /^https?:\/\//.test(req.query.url1)
-            ? req.query.url1
-            : URL_1;
-        urls.push(u);
+        // Build list of URLs to fetch, using query params when valid
+        if (include1) {
+            const u = req.query?.url1 && /^https?:\/\//.test(req.query.url1)
+                ? req.query.url1
+                : URL_1;
+            urls.push(u);
+        }
+        if (include2) {
+            const u = req.query?.url2 && /^https?:\/\//.test(req.query.url2)
+                ? req.query.url2
+                : URL_2;
+            urls.push(u);
+        }
     }
-    if (include2) {
-        const u = req.query?.url2 && /^https?:\/\//.test(req.query.url2)
-            ? req.query.url2
-            : URL_2;
-        urls.push(u);
+
+    if (!urls.length) {
+        res.json({ number: 0 });
+        return;
     }
 
     try {
