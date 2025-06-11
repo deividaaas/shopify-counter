@@ -110,10 +110,31 @@ const navMenu = document.getElementById('nav-menu');
 
 const url1Input = document.getElementById("url1");
 const url2Input = document.getElementById("url2");
-url1Input.value = localStorage.getItem("counterUrl1") || "";
-url2Input.value = localStorage.getItem("counterUrl2") || "";
-url1Input.addEventListener("blur", () => localStorage.setItem("counterUrl1", url1Input.value.trim()));
-url2Input.addEventListener("blur", () => localStorage.setItem("counterUrl2", url2Input.value.trim()));
+
+// Load API URLs from the unified array, falling back to the old keys
+let apis = JSON.parse(localStorage.getItem('counterApis') || '[]');
+if (!apis.length) {
+  const old1 = localStorage.getItem('counterUrl1');
+  const old2 = localStorage.getItem('counterUrl2');
+  if (old1) apis[0] = old1;
+  if (old2) apis[1] = old2;
+}
+url1Input.value = apis[0] || '';
+url2Input.value = apis[1] || '';
+
+function saveUrls() {
+  apis[0] = url1Input.value.trim();
+  apis[1] = url2Input.value.trim();
+  localStorage.setItem('counterApis', JSON.stringify(apis));
+  // Keep legacy keys in sync
+  if (apis[0]) localStorage.setItem('counterUrl1', apis[0]);
+  else localStorage.removeItem('counterUrl1');
+  if (apis[1]) localStorage.setItem('counterUrl2', apis[1]);
+  else localStorage.removeItem('counterUrl2');
+}
+
+url1Input.addEventListener('blur', saveUrls);
+url2Input.addEventListener('blur', saveUrls);
 const now = new Date();
 // Use the same YYYY-MM key as the main page
 const monthKey = now.toISOString().slice(0,7);
