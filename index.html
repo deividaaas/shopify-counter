@@ -145,23 +145,39 @@ if (!apis.length && (old1 || old2)) {
   if (old2) apis.push({ name: 'API 2', url: old2, enabled: true });
 }
 // If no endpoints were saved the server defaults will be used
+const useCustomApis = apis.length > 0;
 
 function renderApiControls() {
   apiControls.innerHTML = '';
-  apis.forEach((api, idx) => {
-    const label = document.createElement('label');
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.checked = api.enabled !== false;
-    box.addEventListener('change', () => {
-      apis[idx].enabled = box.checked;
-      localStorage.setItem('counterApis', JSON.stringify(apis));
-      updateCounter();
+  if (useCustomApis) {
+    apis.forEach((api, idx) => {
+      const label = document.createElement('label');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = api.enabled !== false;
+      box.addEventListener('change', () => {
+        apis[idx].enabled = box.checked;
+        localStorage.setItem('counterApis', JSON.stringify(apis));
+        updateCounter();
+      });
+      label.appendChild(box);
+      label.append(' ' + (api.name || `API ${idx + 1}`));
+      apiControls.appendChild(label);
     });
-    label.appendChild(box);
-    label.append(' ' + (api.name || `API ${idx + 1}`));
-    apiControls.appendChild(label);
-  });
+  } else {
+    ['api1', 'api2'].forEach(id => {
+      const label = document.createElement('label');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.id = id;
+      box.checked = true;
+      label.htmlFor = id;
+      label.appendChild(box);
+      label.append(' API ' + (id === 'api1' ? '1' : '2'));
+      box.addEventListener('change', updateCounter);
+      apiControls.appendChild(label);
+    });
+  }
 }
 
 renderApiControls();
@@ -250,8 +266,17 @@ async function updateCounter() {
   updateProgress(currentValue, currentColor);
   try {
     const params = new URLSearchParams();
-    apis.filter(a => a.enabled && a.url)
-        .forEach(u => params.append('url', u.url));
+    if (useCustomApis) {
+      const active = apis.filter(a => a.enabled && a.url);
+      active.forEach(u => params.append('url', u.url));
+      if (!active.length) params.set('source', 'none');
+    } else {
+      const include1 = document.getElementById('api1').checked;
+      const include2 = document.getElementById('api2').checked;
+      if (include1 && !include2) params.set('source', '1');
+      else if (!include1 && include2) params.set('source', '2');
+      else if (!include1 && !include2) params.set('source', 'none');
+    }
     const query = params.toString();
     const res = await fetch('/api' + (query ? '?' + query : ''));
     const data = await res.json();
