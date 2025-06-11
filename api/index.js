@@ -11,16 +11,25 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // Determine which sources to include based on query parameter
+    const urls = [];
+    if (req.query?.url) {
+        if (Array.isArray(req.query.url)) urls.push(...req.query.url);
+        else urls.push(req.query.url);
+    } else {
+        if (req.query?.url1) urls.push(req.query.url1);
+        if (req.query?.url2) urls.push(req.query.url2);
+    }
+
+    const valid = urls.filter(u => /^https?:\/\//.test(u));
+
     const source = req.query?.source;
-    const include1 = !source || source === 'both' || source === '1';
-    const include2 = !source || source === 'both' || source === '2';
+    const include1 = !valid.length && (!source || source === 'both' || source === '1');
+    const include2 = !valid.length && (!source || source === 'both' || source === '2');
+    if (include1) valid.push(URL_1);
+    if (include2) valid.push(URL_2);
 
     try {
-        const fetches = [];
-        if (include1) fetches.push(fetch(URL_1).then(res => res.json()));
-        if (include2) fetches.push(fetch(URL_2).then(res => res.json()));
-
+        const fetches = valid.map(u => fetch(u).then(res => res.json()));
         const results = await Promise.all(fetches);
         const total = results.reduce((sum, d) => sum + (d.number || 0), 0);
 
