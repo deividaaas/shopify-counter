@@ -27,6 +27,25 @@ Each month's goal is stored separately in `localStorage`. When the month changes
 
 Set the `API_KEY` environment variable to restrict access to the `/api/shopify-counter` route. When a key is set, requests must include the same value in the `x-api-key` header or the API responds with `401 Unauthorized`. Leave `API_KEY` unset to allow unrestricted access.
 
+## API Usage
+
+The `/api/shopify-counter` endpoint accepts two optional query parameters. Use
+`period` to choose a built‑in date range:
+
+- `month` (default) &ndash; count orders from the first of the current month.
+- `year` &ndash; count orders from the start of the current year.
+- `all` &ndash; include all orders.
+
+The calculated start date can be overridden with `created_at_min`, which accepts
+an ISO 8601 timestamp.
+
+Example requests:
+
+```bash
+curl 'https://example.com/api/shopify-counter?period=year'
+curl 'https://example.com/api/shopify-counter?created_at_min=2024-04-01T00:00:00Z'
+```
+
 ## Running tests
 
 Run the test suite with:
