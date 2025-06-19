@@ -34,3 +34,68 @@ test('returns 401 when api key missing', async () => {
   await handler(req, res);
   assert.strictEqual(res.statusCode, 401);
 });
+
+test('uses start of current month when period=month', async () => {
+  const RealDate = Date;
+  const fixed = new Date('2024-06-15T12:00:00Z');
+  global.Date = class extends RealDate {
+    constructor(...args) { return args.length ? new RealDate(...args) : fixed; }
+    static now() { return fixed.getTime(); }
+  };
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => { urls.push(url.toString()); return { json: async () => ({ count: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { period: 'month' } };
+  const res = createRes();
+  await handler(req, res);
+  const expected = '2024-06-01T00:00:00.000Z';
+  urls.forEach(u => {
+    assert.strictEqual(new URL(u).searchParams.get('created_at_min'), expected);
+  });
+  global.fetch = originalFetch;
+  global.Date = RealDate;
+});
+
+test('uses start of current year when period=year', async () => {
+  const RealDate = Date;
+  const fixed = new Date('2024-06-15T12:00:00Z');
+  global.Date = class extends RealDate {
+    constructor(...args) { return args.length ? new RealDate(...args) : fixed; }
+    static now() { return fixed.getTime(); }
+  };
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => { urls.push(url.toString()); return { json: async () => ({ count: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { period: 'year' } };
+  const res = createRes();
+  await handler(req, res);
+  const expected = '2024-01-01T00:00:00.000Z';
+  urls.forEach(u => {
+    assert.strictEqual(new URL(u).searchParams.get('created_at_min'), expected);
+  });
+  global.fetch = originalFetch;
+  global.Date = RealDate;
+});
+
+test('omits created_at_min when period=all', async () => {
+  const RealDate = Date;
+  const fixed = new Date('2024-06-15T12:00:00Z');
+  global.Date = class extends RealDate {
+    constructor(...args) { return args.length ? new RealDate(...args) : fixed; }
+    static now() { return fixed.getTime(); }
+  };
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => { urls.push(url.toString()); return { json: async () => ({ count: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { period: 'all' } };
+  const res = createRes();
+  await handler(req, res);
+  urls.forEach(u => {
+    assert.strictEqual(new URL(u).searchParams.get('created_at_min'), null);
+  });
+  global.fetch = originalFetch;
+  global.Date = RealDate;
+});

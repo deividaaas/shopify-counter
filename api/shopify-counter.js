@@ -4,6 +4,19 @@ const SHOPIFY_SHOP_2 = process.env.SHOPIFY_SHOP_2;
 const SHOPIFY_ADMIN_TOKEN_2 = process.env.SHOPIFY_ADMIN_TOKEN_2;
 const { timingSafeEqual } = require('crypto');
 
+function computeCreatedAtMin(period) {
+  const now = new Date();
+  switch (period) {
+    case 'month':
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    case 'year':
+      return new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
+    case 'all':
+    default:
+      return null;
+  }
+}
+
 async function fetchCount(shop, token, createdAtMin) {
   if (!shop || !token) return 0;
   const url = new URL(`/admin/api/2024-04/orders/count.json`, `https://${shop}`);
@@ -16,7 +29,10 @@ async function fetchCount(shop, token, createdAtMin) {
 }
 
 module.exports = async (req, res) => {
-  const createdAtMin = req.query?.created_at_min;
+  let createdAtMin = req.query?.created_at_min;
+  if (!createdAtMin && req.query?.period) {
+    createdAtMin = computeCreatedAtMin(req.query.period);
+  }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {
     const provided = req.headers['x-api-key'] || '';
