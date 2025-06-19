@@ -135,3 +135,22 @@ test('uses custom url1 when source=1', async () => {
   assert.deepStrictEqual(res.body, { number: 9 });
   global.fetch = originalFetch;
 });
+
+test('returns 0 when a fetch times out', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async (_url, { signal } = {}) => new Promise((resolve, reject) => {
+    signal.addEventListener('abort', () => {
+      const err = new Error('aborted');
+      err.name = 'AbortError';
+      reject(err);
+    });
+  });
+  process.env.API_KEY = '';
+  process.env.FETCH_TIMEOUT_MS = '10';
+  const req = { headers: {} };
+  const res = { json(body) { this.body = body; } };
+  await handler(req, res);
+  assert.deepStrictEqual(res.body, { number: 0 });
+  global.fetch = originalFetch;
+  delete process.env.FETCH_TIMEOUT_MS;
+});

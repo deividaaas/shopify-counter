@@ -4,6 +4,7 @@ const URL_1 = process.env.URL_1 ||
 const URL_2 = process.env.URL_2 ||
     'https://smiirl-shopify.herokuapp.com/c/7e429d3d-726a-44c8-9cae-b4dbe8e3f9bd';
 
+
 module.exports = async (req, res) => {
     const requiredKey = process.env.API_KEY;
     if (requiredKey && req.headers['x-api-key'] !== requiredKey) {
@@ -46,14 +47,30 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const fetches = urls.map(u => fetch(u).then(r => r.json()));
+        const timeout = parseInt(process.env.FETCH_TIMEOUT_MS || '3000', 10);
+        const fetchWithTimeout = async (url) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeout);
+            try {
+                const res = await fetch(url, { signal: controller.signal });
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        };
+
+        const fetches = urls.map(u => fetchWithTimeout(u));
         const results = await Promise.all(fetches);
         const total = results.reduce((sum, d) => sum + (d.number || 0), 0);
 
         res.json({ number: total });
     } catch (error) {
         // If an error occurs, return 0 to avoid breaking the counter
-        console.error('Failed to fetch counters', error);
+        if (error.name === 'AbortError') {
+            console.error('Fetch timed out');
+        } else {
+            console.error('Failed to fetch counters', error);
+        }
         res.json({ number: 0 });
     }
 };
