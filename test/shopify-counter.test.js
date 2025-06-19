@@ -18,7 +18,7 @@ function createRes() {
 test('sums counts from both shops', async () => {
   const originalFetch = global.fetch;
   let call = 0;
-  global.fetch = async () => ({ json: async () => ({ count: ++call }) });
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({ count: ++call }) });
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
   const res = createRes();

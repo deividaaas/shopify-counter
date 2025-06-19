@@ -11,6 +11,10 @@ async function fetchCount(shop, token, createdAtMin) {
   const res = await fetch(url, {
     headers: { 'X-Shopify-Access-Token': token }
   });
+  if (!res.ok) {
+    console.error(`Shopify request failed for ${shop}: ${res.status}`);
+    throw new Error(`Unexpected status code ${res.status}`);
+  }
   const data = await res.json();
   return data.count || 0;
 }
