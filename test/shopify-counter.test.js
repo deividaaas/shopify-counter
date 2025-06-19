@@ -96,6 +96,23 @@ test('returns error when a shop fetch fails', async () => {
   global.fetch = originalFetch;
 });
 
+test('returns error when a second shop fetch fails', async () => {
+  const originalFetch = global.fetch;
+  let call = 0;
+  global.fetch = async () => {
+    call++;
+    if (call === 2) throw new Error('boom');
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: {} };
+  const res = createRes();
+  await handler(req, res);
+  assert.strictEqual(res.statusCode, 502);
+  assert.deepStrictEqual(res.body, { error: 'Failed to fetch count from shop 2' });
+  global.fetch = originalFetch;
+});
+
 test('returns 401 when api key missing', async () => {
   process.env.API_KEY = 'secret';
   const req = { headers: {} };
