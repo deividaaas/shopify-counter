@@ -21,6 +21,7 @@ test('combines values from both counters', async () => {
   let call = 0;
   global.fetch = async () => ({ json: async () => ({ number: ++call }) });
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
   const req = { headers: {} };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -37,6 +38,7 @@ test('fetches only first counter when source=1', async () => {
     return { json: async () => ({ number: 5 }) };
   };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: '1' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -53,6 +55,7 @@ test('fetches only second counter when source=2', async () => {
     return { json: async () => ({ number: 7 }) };
   };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: '2' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -69,6 +72,7 @@ test('uses url query parameters when provided', async () => {
     return { json: async () => ({ number: 2 }) };
   };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = 'a.com,b.com';
   const req = { headers: {}, query: { url1: 'https://a.com', url2: 'https://b.com' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -85,6 +89,7 @@ test('combines numbers from multiple url params', async () => {
     return { json: async () => ({ number: 1 }) };
   };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = 'a.com,b.com,c.com';
   const req = { headers: {}, query: { url: ['https://a.com', 'https://b.com', 'https://c.com'] } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -98,6 +103,7 @@ test('returns 0 when source=none', async () => {
   let calls = 0;
   global.fetch = async () => { calls++; return { json: async () => ({ number: 1 }) }; };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: 'none' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -111,6 +117,7 @@ test('falls back to default url when url1 is invalid', async () => {
   const urls = [];
   global.fetch = async (url) => { urls.push(url); return { json: async () => ({ number: 1 }) }; };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: '1', url1: 'ftp://bad' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
@@ -128,10 +135,30 @@ test('uses custom url1 when source=1', async () => {
     return { json: async () => ({ number: 9 }) };
   };
   process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = 'custom.com';
   const req = { headers: {}, query: { source: '1', url1: 'https://custom.com' } };
   const res = { json(body) { this.body = body; } };
   await handler(req, res);
   assert.deepStrictEqual(urls, ['https://custom.com']);
   assert.deepStrictEqual(res.body, { number: 9 });
+  global.fetch = originalFetch;
+});
+
+test('rejects url when hostname is not allowed', async () => {
+  const originalFetch = global.fetch;
+  let called = false;
+  global.fetch = async () => { called = true; };
+  process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
+  const req = { headers: {}, query: { source: '1', url1: 'https://evil.com' } };
+  let statusCode = 200;
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(body) { this.body = body; }
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 400);
+  assert.deepStrictEqual(res.body, { error: 'URL not allowed' });
+  assert.strictEqual(called, false);
   global.fetch = originalFetch;
 });
