@@ -5,7 +5,7 @@ This simple project displays a counter on a web page and updates it from a serve
 ## Setup
 
 1. Install dependencies (Node 18 or newer is required but no extra packages are needed).
-2. Set the environment variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`, `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` with your Shopify store domains and tokens. An example `.env` file is provided.
+2. Set the environment variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`, `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` with your Shopify store domains and tokens. Copy `.env.example` to `.env` and fill in your values.
 3. (Optional) You can still use `URL_1` and `URL_2` for the original counter endpoints.
 4. Start the development server with `vercel dev`.
 5. Open `index.html` in your browser to see the counter.
