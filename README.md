@@ -22,3 +22,17 @@ editing the number next to it. The progress bar changes color along with the cou
 The page now includes a small hamburger menu in the top-right corner for quick navigation links.
 Use the **Settings** link in that menu to open a page with a table for recording monthly goals for the year.
 Each month's goal is stored separately in `localStorage`. When the month changes the counter page reads the goal for that month so the values persist without a backend.
+
+## API Access
+
+Set the `API_KEY` environment variable to restrict access to the `/api` route. When a key is set, requests must include the same value in the `x-api-key` header or the API responds with `401 Unauthorized`. Leave `API_KEY` unset to allow unrestricted access.
+
+## Running tests
+
+Run the test suite with:
+
+```bash
+npm test
+```
+
+This command executes `node --test` under the hood.
