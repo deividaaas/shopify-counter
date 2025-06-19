@@ -91,7 +91,10 @@ Follow these steps if the API does not return the expected counts after deployme
    numbers.
 6. If something fails, log the problem clearly and return a meaningful error
    response instead of dummy values.
- pe16f0-codex/fix-api-functionality
+
+When counting orders the API now sends the query parameter `status=any` so that
+archived and closed orders are included. Make sure your admin tokens have the
+`read_orders` scope.
 
 ## Slik feilsøker du API-integrasjon
 
@@ -112,5 +115,3 @@ Follow these steps if the API does not return the expected counts after deployme
    dette skjer.
 4. Sjekk antall ordre i Shopify Admin for valgt periode og sammenlign med
    verdien fra `/api/shopify-counter`. Tallene skal matche.
-=======
- main

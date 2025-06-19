@@ -28,6 +28,8 @@ async function fetchCount(shop, token, createdAtMin) {
   }
   const url = new URL(`/admin/api/2024-04/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
+  // count all orders including closed/archived ones
+  url.searchParams.set('status', 'any');
   const tokenId = token.slice(0, 6);
   console.log(`Fetching ${url} with token ${tokenId}...`);
   const res = await fetch(url, {
