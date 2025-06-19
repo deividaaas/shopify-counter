@@ -3,6 +3,7 @@ const URL_1 = process.env.URL_1 ||
     'https://smiirl-shopify.herokuapp.com/c/096a519a-f432-48da-beb2-c0ae6438e9e1';
 const URL_2 = process.env.URL_2 ||
     'https://smiirl-shopify.herokuapp.com/c/7e429d3d-726a-44c8-9cae-b4dbe8e3f9bd';
+const { timingSafeEqual } = require('crypto');
 
 // Build list of allowed hostnames. The hostnames for the two default URLs are
 // always permitted and additional ones can be supplied via the ALLOWED_HOSTS
@@ -30,9 +31,17 @@ function hostnameAllowed(u, allowedHosts) {
 module.exports = async (req, res) => {
     const ALLOWED_HOSTS = buildAllowedHosts();
     const requiredKey = process.env.API_KEY;
-    if (requiredKey && req.headers['x-api-key'] !== requiredKey) {
-        res.status(401).json({ error: 'Unauthorized' });
-        return;
+    if (requiredKey) {
+        const provided = req.headers['x-api-key'] || '';
+        const providedBuf = Buffer.from(provided);
+        const requiredBuf = Buffer.from(requiredKey);
+        const valid =
+            providedBuf.length === requiredBuf.length &&
+            timingSafeEqual(providedBuf, requiredBuf);
+        if (!valid) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
     }
 
     // If "url" query params are provided, use them directly.

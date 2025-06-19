@@ -16,6 +16,22 @@ test('returns 401 when api key is missing', async () => {
   assert.strictEqual(statusCode, 401);
 });
 
+test('accepts request when api key matches', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({ json: async () => ({ number: 1 }) });
+  process.env.API_KEY = 'secret';
+  const req = { headers: { 'x-api-key': 'secret' } };
+  let statusCode = 200;
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(body) { this.body = body; }
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 200);
+  assert.deepStrictEqual(res.body, { number: 2 });
+  global.fetch = originalFetch;
+});
+
 test('combines values from both counters', async () => {
   const originalFetch = global.fetch;
   let call = 0;
