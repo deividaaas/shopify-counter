@@ -5,7 +5,7 @@ This simple project displays a counter on a web page and updates it from a serve
 ## Setup
 
 1. Install dependencies (Node 18 or newer is required but no extra packages are needed).
-2. Set the environment variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`, `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` with your Shopify store domains and tokens. Values must look like `my-store.myshopify.com` and the tokens must be valid. These variables are required for both preview and production deployments. Copy `.env.example` to `.env` and replace the placeholder values.
+2. Set the environment variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`, `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` with your Shopify store domains and tokens. Values must look like `my-store.myshopify.com` and the tokens must be valid. These variables are required for both preview and production deployments. Copy `.env.example` to `.env` and replace the placeholder values. Define the same variables in your Vercel project to use them in deployed environments.
 3. (Optional) You can still use `URL_1` and `URL_2` for the original counter endpoints.
 4. Start the development server with `vercel dev`.
 5. Open `index.html` in your browser to see the counter.
@@ -65,3 +65,29 @@ npm test
 ```
 
 This command executes `node --test` under the hood.
+
+## Troubleshooting production
+
+Follow these steps if the API does not return the expected counts after deployment:
+
+1. In Vercel, ensure the variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`,
+   `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` are defined for both *Production*
+   and *Preview* environments. The shop values must be your `myshopify.com`
+   domains without `https://`, and the tokens must be valid admin tokens.
+2. Confirm that the tokens include the `read_orders` scope and that the app is
+   installed and active in each store.
+3. After updating any variables, trigger a redeploy so the new values are
+   available to the serverless function.
+4. Check the Vercel **Runtime Logs** for messages such as `Unauthorized`,
+   `Missing env variable`, `Failed to fetch` or `count: 0` when calling
+   `/api/shopify-counter`.
+5. Test the production endpoint directly:
+
+   ```bash
+   curl 'https://<your-domain>/api/shopify-counter?period=month'
+   ```
+
+   The response should contain real counts from Shopify, not placeholder
+   numbers.
+6. If something fails, log the problem clearly and return a meaningful error
+   response instead of dummy values.
