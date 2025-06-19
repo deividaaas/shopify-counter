@@ -18,7 +18,7 @@ test('returns 401 when api key is missing', async () => {
 
 test('accepts request when api key matches', async () => {
   const originalFetch = global.fetch;
-  global.fetch = async () => ({ json: async () => ({ number: 1 }) });
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({ number: 1 }) });
   process.env.API_KEY = 'secret';
   const req = { headers: { 'x-api-key': 'secret' } };
   let statusCode = 200;
@@ -35,7 +35,7 @@ test('accepts request when api key matches', async () => {
 test('combines values from both counters', async () => {
   const originalFetch = global.fetch;
   let call = 0;
-  global.fetch = async () => ({ json: async () => ({ number: ++call }) });
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({ number: ++call }) });
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = '';
   const req = { headers: {} };
@@ -51,7 +51,7 @@ test('fetches only first counter when source=1', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ number: 5 }) };
+    return { ok: true, status: 200, json: async () => ({ number: 5 }) };
   };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = '';
@@ -68,7 +68,7 @@ test('fetches only second counter when source=2', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ number: 7 }) };
+    return { ok: true, status: 200, json: async () => ({ number: 7 }) };
   };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = '';
@@ -85,7 +85,7 @@ test('uses url query parameters when provided', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ number: 2 }) };
+    return { ok: true, status: 200, json: async () => ({ number: 2 }) };
   };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = 'a.com,b.com';
@@ -102,7 +102,7 @@ test('combines numbers from multiple url params', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ number: 1 }) };
+    return { ok: true, status: 200, json: async () => ({ number: 1 }) };
   };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = 'a.com,b.com,c.com';
@@ -117,7 +117,7 @@ test('combines numbers from multiple url params', async () => {
 test('returns 0 when source=none', async () => {
   const originalFetch = global.fetch;
   let calls = 0;
-  global.fetch = async () => { calls++; return { json: async () => ({ number: 1 }) }; };
+  global.fetch = async () => { calls++; return { ok: true, status: 200, json: async () => ({ number: 1 }) }; };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: 'none' } };
@@ -131,7 +131,7 @@ test('returns 0 when source=none', async () => {
 test('falls back to default url when url1 is invalid', async () => {
   const originalFetch = global.fetch;
   const urls = [];
-  global.fetch = async (url) => { urls.push(url); return { json: async () => ({ number: 1 }) }; };
+  global.fetch = async (url) => { urls.push(url); return { ok: true, status: 200, json: async () => ({ number: 1 }) }; };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = '';
   const req = { headers: {}, query: { source: '1', url1: 'ftp://bad' } };
@@ -148,7 +148,7 @@ test('uses custom url1 when source=1', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ number: 9 }) };
+    return { ok: true, status: 200, json: async () => ({ number: 9 }) };
   };
   process.env.API_KEY = '';
   process.env.ALLOWED_HOSTS = 'custom.com';
