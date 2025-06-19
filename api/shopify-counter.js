@@ -28,9 +28,20 @@ async function fetchCount(shop, token, createdAtMin) {
   }
   const url = new URL(`/admin/api/2024-04/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
+  const tokenId = token.slice(0, 6);
+  console.log(`Fetching ${url} with token ${tokenId}...`);
   const res = await fetch(url, {
     headers: { 'X-Shopify-Access-Token': token }
   });
+  let text = '';
+  let data;
+  if (typeof res.text === 'function') {
+    text = await res.text();
+  } else if (typeof res.json === 'function') {
+    data = await res.json();
+    text = JSON.stringify(data);
+  }
+  console.log(`Response ${res.status} from ${shop}: ${text}`);
   if (!res.ok) {
     console.error(`Shopify request failed for ${shop}: ${res.status}`);
     if (res.status === 401) {
@@ -38,7 +49,14 @@ async function fetchCount(shop, token, createdAtMin) {
     }
     throw new Error(`Unexpected status code ${res.status}`);
   }
-  const data = await res.json();
+  if (!data) {
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error(`Failed to parse response for ${shop}:`, text);
+      throw new Error('Invalid JSON');
+    }
+  }
   if (typeof data.count !== 'number') {
     console.error(`Invalid response for ${shop}:`, data);
     throw new Error('Missing count');
@@ -85,7 +103,7 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 1 count', err);
-    res.status(502).json({ error: 'Failed to fetch count from shop 1' });
+    res.status(502).json({ number: 0, error: 'Failed to fetch count from shop 1' });
     return;
   }
   try {
@@ -96,7 +114,7 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 2 count', err);
-    res.status(502).json({ error: 'Failed to fetch count from shop 2' });
+    res.status(502).json({ number: 0, error: 'Failed to fetch count from shop 2' });
     return;
   }
   const total = results.butikk1 + results.butikk2;
