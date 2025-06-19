@@ -258,7 +258,7 @@ async function updateCounter() {
     });
     if (enabled.length === 0) params.set('source', 'none');
     const query = params.toString();
-    const res = await fetch('/api' + (query ? '?' + query : ''));
+    const res = await fetch('/api/shopify-counter' + (query ? '?' + query : ''));
     const data = await res.json();
     const value = data.number ?? 0;
     if (value !== currentValue) {
