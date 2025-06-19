@@ -4,8 +4,28 @@ const SHOPIFY_SHOP_2 = process.env.SHOPIFY_SHOP_2;
 const SHOPIFY_ADMIN_TOKEN_2 = process.env.SHOPIFY_ADMIN_TOKEN_2;
 const { timingSafeEqual } = require('crypto');
 
+function validateEnv() {
+  const errors = [];
+  const shopRegex = /^[a-z0-9-]+\.myshopify\.com$/i;
+  if (!SHOPIFY_SHOP_1 || !shopRegex.test(SHOPIFY_SHOP_1)) {
+    errors.push('SHOPIFY_SHOP_1');
+  }
+  if (!SHOPIFY_ADMIN_TOKEN_1 || SHOPIFY_ADMIN_TOKEN_1 === 'token1') {
+    errors.push('SHOPIFY_ADMIN_TOKEN_1');
+  }
+  if (!SHOPIFY_SHOP_2 || !shopRegex.test(SHOPIFY_SHOP_2)) {
+    errors.push('SHOPIFY_SHOP_2');
+  }
+  if (!SHOPIFY_ADMIN_TOKEN_2 || SHOPIFY_ADMIN_TOKEN_2 === 'token2') {
+    errors.push('SHOPIFY_ADMIN_TOKEN_2');
+  }
+  return errors;
+}
+
 async function fetchCount(shop, token, createdAtMin) {
-  if (!shop || !token) return 0;
+  if (!shop || !token) {
+    throw new Error('Missing shop or token');
+  }
   const url = new URL(`/admin/api/2024-04/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
   const res = await fetch(url, {
@@ -13,13 +33,29 @@ async function fetchCount(shop, token, createdAtMin) {
   });
   if (!res.ok) {
     console.error(`Shopify request failed for ${shop}: ${res.status}`);
+    if (res.status === 401) {
+      console.error('Unauthorized access to Shopify');
+    }
     throw new Error(`Unexpected status code ${res.status}`);
   }
   const data = await res.json();
-  return data.count || 0;
+  if (typeof data.count !== 'number') {
+    console.error(`Invalid response for ${shop}:`, data);
+    throw new Error('Missing count');
+  }
+  if (data.count === 0) {
+    console.error(`Shopify returned 0 orders for ${shop}`);
+  }
+  return data.count;
 }
 
 module.exports = async (req, res) => {
+  const envErrors = validateEnv();
+  if (envErrors.length) {
+    console.error('Invalid Shopify configuration:', envErrors.join(', '));
+    res.status(500).json({ error: 'Invalid Shopify configuration' });
+    return;
+  }
   const period = req.query?.period || 'month';
   let createdAtMin;
   const now = new Date();
