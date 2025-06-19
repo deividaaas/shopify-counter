@@ -91,3 +91,23 @@ Follow these steps if the API does not return the expected counts after deployme
    numbers.
 6. If something fails, log the problem clearly and return a meaningful error
    response instead of dummy values.
+
+## Slik feilsøker du API-integrasjon
+
+1. Test Shopify-API direkte for hver butikk:
+
+   ```bash
+   curl -H "X-Shopify-Access-Token: <TOKEN>" \
+     https://<SHOP>.myshopify.com/admin/api/2025-04/orders/count.json
+   ```
+
+   Svaret bør være på formen `{ "count": n }`. Hvis du ikke får et gyldig tall,
+   må tokenet kontrolleres eller regenereres.
+2. Når `fetchCount` kjøres logges responsen fra Shopify til Vercel Runtime Logs
+   sammen med hvilken URL og de første tegnene i tokenet som brukes. Se loggene
+   for statuskode og JSON som returneres.
+3. Hvis API-kallet mislykkes eller returnerer urealistisk store tall, sender
+   backend en feilmelding og `number: 0`. Frontend oppdaterer telleren til 0 når
+   dette skjer.
+4. Sjekk antall ordre i Shopify Admin for valgt periode og sammenlign med
+   verdien fra `/api/shopify-counter`. Tallene skal matche.
