@@ -15,8 +15,31 @@ async function fetchCount(shop, token, createdAtMin) {
   return data.count || 0;
 }
 
+function startOfMonth() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+}
+
+function startOfYear() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
+}
+
 module.exports = async (req, res) => {
-  const createdAtMin = req.query?.created_at_min;
+  let createdAtMin = req.query?.created_at_min;
+  const period = req.query?.period;
+  if (!createdAtMin && period) {
+    if (period === 'month') {
+      createdAtMin = startOfMonth();
+    } else if (period === 'year') {
+      createdAtMin = startOfYear();
+    } else if (period === 'all') {
+      createdAtMin = undefined;
+    } else {
+      res.status(400).json({ error: 'Invalid period' });
+      return;
+    }
+  }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {
     const provided = req.headers['x-api-key'] || '';

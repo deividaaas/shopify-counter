@@ -34,3 +34,24 @@ test('returns 401 when api key missing', async () => {
   await handler(req, res);
   assert.strictEqual(res.statusCode, 401);
 });
+
+test('period=all omits created_at_min', async () => {
+  const urls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async url => { urls.push(url.toString()); return { json: async () => ({ count: 1 }) }; };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { period: 'all' } };
+  const res = createRes();
+  await handler(req, res);
+  const parsed = new URL(urls[0]);
+  assert.ok(!parsed.searchParams.has('created_at_min'));
+  global.fetch = originalFetch;
+});
+
+test('invalid period returns 400', async () => {
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: { period: 'week' } };
+  const res = createRes();
+  await handler(req, res);
+  assert.strictEqual(res.statusCode, 400);
+});
