@@ -262,9 +262,15 @@ async function updateCounter() {
     const data = await res.json();
     if (data.error) {
       console.error('Counter API error:', data.error);
+      animateCounter(0, target);
+      currentValue = 0;
       return;
     }
-    const value = data.number ?? 0;
+    let value = Number(data.number ?? 0);
+    if (!Number.isFinite(value) || value < 0 || value > 1000000) {
+      console.error('Invalid counter value:', data.number);
+      value = 0;
+    }
     if (value !== currentValue) {
       animateCounter(value, target);
       currentValue = value;
