@@ -32,7 +32,7 @@ test('uses start of current month by default', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
@@ -50,7 +50,7 @@ test('uses start of current year when period=year', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: { period: 'year' } };
@@ -68,7 +68,7 @@ test('omits created_at_min when period=all', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: { period: 'all' } };
