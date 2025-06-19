@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
-process.env.SHOPIFY_SHOP_1 = 'shop1';
+process.env.SHOPIFY_SHOP_1 = 'shop1.myshopify.com';
 process.env.SHOPIFY_ADMIN_TOKEN_1 = 't1';
-process.env.SHOPIFY_SHOP_2 = 'shop2';
+process.env.SHOPIFY_SHOP_2 = 'shop2.myshopify.com';
 process.env.SHOPIFY_ADMIN_TOKEN_2 = 't2';
 const handler = require('../api/shopify-counter.js');
 
