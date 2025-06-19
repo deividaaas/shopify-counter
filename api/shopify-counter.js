@@ -7,13 +7,13 @@ const { timingSafeEqual } = require('crypto');
 function computeCreatedAtMin(period) {
   const now = new Date();
   switch (period) {
-    case 'month':
-      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
     case 'year':
       return new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
     case 'all':
+      return undefined;
+    case 'month':
     default:
-      return null;
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   }
 }
 
@@ -29,9 +29,12 @@ async function fetchCount(shop, token, createdAtMin) {
 }
 
 module.exports = async (req, res) => {
-  let createdAtMin = req.query?.created_at_min;
-  if (!createdAtMin && req.query?.period) {
-    createdAtMin = computeCreatedAtMin(req.query.period);
+  let createdAtMin;
+  if (req.query?.created_at_min !== undefined) {
+    createdAtMin = req.query.created_at_min;
+  } else {
+    const period = req.query?.period || 'month';
+    createdAtMin = computeCreatedAtMin(period);
   }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {
@@ -44,17 +47,30 @@ module.exports = async (req, res) => {
     }
   }
   const results = { butikk1: 0, butikk2: 0 };
-  let total = 0;
   try {
-    results.butikk1 = await fetchCount(SHOPIFY_SHOP_1, SHOPIFY_ADMIN_TOKEN_1, createdAtMin);
+    results.butikk1 = await fetchCount(
+      SHOPIFY_SHOP_1,
+      SHOPIFY_ADMIN_TOKEN_1,
+      createdAtMin
+    );
   } catch (err) {
     console.error('Failed to fetch shop 1 count', err);
+    res.status(502).json({ error: 'Failed to fetch count from shop 1' });
+    return;
   }
+
   try {
-    results.butikk2 = await fetchCount(SHOPIFY_SHOP_2, SHOPIFY_ADMIN_TOKEN_2, createdAtMin);
+    results.butikk2 = await fetchCount(
+      SHOPIFY_SHOP_2,
+      SHOPIFY_ADMIN_TOKEN_2,
+      createdAtMin
+    );
   } catch (err) {
     console.error('Failed to fetch shop 2 count', err);
+    res.status(502).json({ error: 'Failed to fetch count from shop 2' });
+    return;
   }
-  total = results.butikk1 + results.butikk2;
+
+  const total = results.butikk1 + results.butikk2;
   res.json({ number: total, ...results });
 };
