@@ -23,27 +23,31 @@ The page now includes a small hamburger menu in the top-right corner for quick n
 Use the **Settings** link in that menu to open a page with a table for recording monthly goals for the year.
 Each month's goal is stored separately in `localStorage`. When the month changes the counter page reads the goal for that month so the values persist without a backend.
 
+A new date-range selector lets you pick custom start and end dates. When used, the counter page adds `created_at_min` and `created_at_max` query parameters to requests so only orders within that range are counted.
+
 ## API Access
 
 Set the `API_KEY` environment variable to restrict access to the `/api/shopify-counter` route. When a key is set, requests must include the same value in the `x-api-key` header or the API responds with `401 Unauthorized`. Leave `API_KEY` unset to allow unrestricted access.
 
 ## API Usage
 
-The `/api/shopify-counter` endpoint accepts two optional query parameters. Use
-`period` to choose a built‑in date range:
+The `/api/shopify-counter` endpoint supports several optional query parameters.
+Use `period` to choose a built‑in date range:
 
 - `month` (default) &ndash; count orders from the first of the current month.
 - `year` &ndash; count orders from the start of the current year.
 - `all` &ndash; include all orders.
 
 The calculated start date can be overridden with `created_at_min`, which accepts
-an ISO 8601 timestamp.
+an ISO 8601 timestamp. Provide `created_at_max` as well to limit the range
+to orders created before that time. Both parameters use ISO 8601.
 
 Example requests:
 
 ```bash
 curl 'https://example.com/api/shopify-counter?period=year'
 curl 'https://example.com/api/shopify-counter?created_at_min=2024-04-01T00:00:00Z'
+curl 'https://example.com/api/shopify-counter?created_at_min=2024-04-01T00:00:00Z&created_at_max=2024-04-30T23:59:59Z'
 ```
 
 The API returns the combined order count along with counts for each shop:
