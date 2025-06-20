@@ -115,3 +115,4 @@ archived and closed orders are included. Make sure your admin tokens have the
    dette skjer.
 4. Sjekk antall ordre i Shopify Admin for valgt periode og sammenlign med
    verdien fra `/api/shopify-counter`. Tallene skal matche.
+5. På enkelte butikker kan det være nødvendig å installere appen på nytt eller opprette en ny token for API-brukeren dersom eksisterende token er utdatert.
