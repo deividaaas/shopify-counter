@@ -342,16 +342,16 @@ async function updateCounter() {
     if (enabled.length === 0) params.set('source', 'none');
     const query = params.toString();
     const res = await fetch('/api/shopify-counter' + (query ? '?' + query : ''));
+    const raw = await res.text();
     let data;
     try {
-      data = await res.json();
+      data = JSON.parse(raw);
     } catch (jsonErr) {
       throw new Error('Invalid JSON');
     }
     if (!res.ok || data.error) {
-      const msg = data.error || `Status ${res.status}`;
-      console.error('Counter API error:', msg);
-      errorElement.textContent = msg;
+      console.error('Counter API error:', data.error || `Status ${res.status}`);
+      errorElement.textContent = 'Kunne ikke hente data';
       return;
     }
     errorElement.textContent = '';
@@ -370,7 +370,7 @@ async function updateCounter() {
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
-    errorElement.textContent = err.message;
+    errorElement.textContent = 'Kunne ikke hente data';
   }
 }
 

@@ -36,33 +36,22 @@ async function fetchCount(shop, token, createdAtMin, createdAtMax) {
   const res = await fetch(url, {
     headers: { 'X-Shopify-Access-Token': token }
   });
-  let text = '';
-  let data;
-  if (typeof res.text === 'function') {
-    text = await res.text();
-  } else if (typeof res.json === 'function') {
-    data = await res.json();
-    text = JSON.stringify(data);
-  }
-  console.log(`Response ${res.status} from ${shop}: ${text}`);
+  const raw = await res.text();
+  console.log(`Response ${res.status} from ${shop}: ${raw}`);
   if (!res.ok) {
-    console.error(`Shopify request failed for ${shop}: ${res.status} ${text}`);
-    if (res.status === 401) {
-      console.error('Unauthorized access to Shopify');
-    }
-    throw new Error(`Status ${res.status}: ${text}`);
+    console.error(`Shopify request failed for ${shop}: ${res.status}`);
+    throw new Error('Invalid JSON from Shopify');
   }
-  if (!data) {
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      console.error(`Failed to parse response for ${shop}:`, text);
-      throw new Error('Invalid JSON');
-    }
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    console.error('Failed to parse Shopify response as JSON:', err);
+    throw new Error('Invalid JSON from Shopify');
   }
   if (typeof data.count !== 'number') {
     console.error(`Invalid response for ${shop}:`, data);
-    throw new Error('Missing count');
+    throw new Error('Invalid JSON from Shopify');
   }
   if (data.count === 0) {
     console.error(`Shopify returned 0 orders for ${shop}`);
@@ -89,15 +78,11 @@ module.exports = async (req, res) => {
     createdAtMin = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   }
   if (req.query?.created_at_min) {
- codex/log-response-status-and-handle-errors-in-api/index.js
-    createdAtMin = req.query.created_at_min;
-=======
     const provided = req.query.created_at_min;
     const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
     if (isoRegex.test(provided) && !isNaN(new Date(provided).getTime())) {
       createdAtMin = provided;
     }
- main
   }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {
@@ -119,7 +104,11 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 1 count', err);
-    res.status(502).json({ number: 0, error: err.message });
+    if (err.message === 'Invalid JSON from Shopify') {
+      res.status(500).json({ error: 'Shopify API returned invalid JSON' });
+    } else {
+      res.status(502).json({ number: 0, error: err.message });
+    }
     return;
   }
   try {
@@ -131,7 +120,11 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 2 count', err);
-    res.status(502).json({ number: 0, error: err.message });
+    if (err.message === 'Invalid JSON from Shopify') {
+      res.status(500).json({ error: 'Shopify API returned invalid JSON' });
+    } else {
+      res.status(502).json({ number: 0, error: err.message });
+    }
     return;
   }
   const total = results.butikk1 + results.butikk2;
