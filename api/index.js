@@ -100,8 +100,8 @@ module.exports = async (req, res) => {
 
         res.json({ number: total });
     } catch (error) {
-        // If an error occurs, return 0 to avoid breaking the counter
+        // If an error occurs, return 0 and include the error message
         console.error('Failed to fetch counters', error);
-        res.json({ number: 0 });
+        res.status(502).json({ number: 0, error: error.message });
     }
 };
