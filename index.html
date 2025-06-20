@@ -111,6 +111,11 @@ body {
     margin-top: 10px;
     font-size: 1.5vw;
   }
+  #error-msg {
+    margin-top: 10px;
+    color: red;
+    font-size: 1.2vw;
+  }
 </style>
 </head>
 <body>
@@ -147,6 +152,7 @@ body {
   <div id="api-controls">
     <div id="api-checkboxes"></div>
   </div>
+  <div id="error-msg"></div>
   <div id="slider-container">
     <label for="goal-slider">Monthly goal:</label>
     <input type="range" id="goal-slider" min="100000" max="1000000" step="1000">
@@ -169,6 +175,7 @@ const customDates = document.getElementById('custom-dates');
 const startInput = document.getElementById('custom-start');
 const endInput = document.getElementById('custom-end');
 const periodDisplay = document.getElementById('active-period');
+const errorElement = document.getElementById('error-msg');
 
 let apiList = JSON.parse(localStorage.getItem('apiList') || '[]');
 if (apiList.length === 0) {
@@ -335,13 +342,19 @@ async function updateCounter() {
     if (enabled.length === 0) params.set('source', 'none');
     const query = params.toString();
     const res = await fetch('/api/shopify-counter' + (query ? '?' + query : ''));
-    const data = await res.json();
-    if (data.error) {
-      console.error('Counter API error:', data.error);
-      animateCounter(0, target);
-      currentValue = 0;
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      throw new Error('Invalid JSON');
+    }
+    if (!res.ok || data.error) {
+      const msg = data.error || `Status ${res.status}`;
+      console.error('Counter API error:', msg);
+      errorElement.textContent = msg;
       return;
     }
+    errorElement.textContent = '';
     let value = Number(data.number ?? 0);
     if (!Number.isFinite(value) || value < 0 || value > 1000000) {
       console.error('Invalid counter value:', data.number);
@@ -357,6 +370,7 @@ async function updateCounter() {
     }
   } catch (err) {
     console.error('Failed to fetch counter:', err);
+    errorElement.textContent = err.message;
   }
 }
 
