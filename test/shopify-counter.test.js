@@ -18,7 +18,7 @@ function createRes() {
 test('sums counts from both shops', async () => {
   const originalFetch = global.fetch;
   let call = 0;
-  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({ count: ++call }) });
+  global.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ count: ++call }) });
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
   const res = createRes();
@@ -32,7 +32,7 @@ test('uses start of current month by default', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
@@ -50,7 +50,7 @@ test('uses start of current year when period=year', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: { period: 'year' } };
@@ -68,7 +68,7 @@ test('omits created_at_min when period=all', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: { period: 'all' } };
@@ -84,7 +84,7 @@ test('forwards created_at_min and created_at_max query params', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = {
@@ -100,10 +100,6 @@ test('forwards created_at_min and created_at_max query params', async () => {
   assert.strictEqual(urls[0].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_min'), '2024-05-01T00:00:00Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
- codex/log-response-status-and-handle-errors-in-api/index.js
-=======
- codex/add-error-message-handling-in-index.html
-
   global.fetch = originalFetch;
 });
 
@@ -112,7 +108,7 @@ test('uses provided created_at_min when valid', async () => {
   const urls = [];
   global.fetch = async (url) => {
     urls.push(url);
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const value = '2023-08-01T00:00:00Z';
@@ -121,8 +117,23 @@ test('uses provided created_at_min when valid', async () => {
   await handler(req, res);
   assert.strictEqual(urls[0].searchParams.get('created_at_min'), value);
   assert.strictEqual(urls[1].searchParams.get('created_at_min'), value);
- main
- main
+  global.fetch = originalFetch;
+});
+
+test('returns 500 when Shopify responds with invalid JSON', async () => {
+  const originalFetch = global.fetch;
+  let call = 0;
+  global.fetch = async () => {
+    call++;
+    return { ok: true, status: 200, text: async () => 'oops' };
+  };
+  process.env.API_KEY = '';
+  const req = { headers: {}, query: {} };
+  const res = createRes();
+  await handler(req, res);
+  assert.strictEqual(res.statusCode, 500);
+  assert.deepStrictEqual(res.body, { error: 'Shopify API returned invalid JSON' });
+  assert.strictEqual(call, 1);
   global.fetch = originalFetch;
 });
 
@@ -132,7 +143,7 @@ test('returns error when a shop fetch fails', async () => {
   global.fetch = async () => {
     call++;
     if (call === 1) throw new Error('boom');
-    return { json: async () => ({ count: 1 }) };
+    return { text: async () => JSON.stringify({ count: 1 }), ok: true, status: 200 };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
@@ -149,7 +160,7 @@ test('returns error when a second shop fetch fails', async () => {
   global.fetch = async () => {
     call++;
     if (call === 2) throw new Error('boom');
-    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ count: 1 }) };
   };
   process.env.API_KEY = '';
   const req = { headers: {}, query: {} };
