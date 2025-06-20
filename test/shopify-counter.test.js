@@ -79,11 +79,7 @@ test('omits created_at_min when period=all', async () => {
   global.fetch = originalFetch;
 });
 
- me19lw-codex/extend-fetchcount-to-handle-createdatmax
 test('forwards created_at_min and created_at_max query params', async () => {
-=======
-test('uses provided created_at_min when valid', async () => {
-  main
   const originalFetch = global.fetch;
   const urls = [];
   global.fetch = async (url) => {
@@ -91,7 +87,6 @@ test('uses provided created_at_min when valid', async () => {
     return { ok: true, status: 200, json: async () => ({ count: 1 }) };
   };
   process.env.API_KEY = '';
- me19lw-codex/extend-fetchcount-to-handle-createdatmax
   const req = {
     headers: {},
     query: {
@@ -105,14 +100,6 @@ test('uses provided created_at_min when valid', async () => {
   assert.strictEqual(urls[0].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_min'), '2024-05-01T00:00:00Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
-=======
-  const value = '2023-08-01T00:00:00Z';
-  const req = { headers: {}, query: { created_at_min: value } };
-  const res = createRes();
-  await handler(req, res);
-  assert.strictEqual(urls[0].searchParams.get('created_at_min'), value);
-  assert.strictEqual(urls[1].searchParams.get('created_at_min'), value);
- main
   global.fetch = originalFetch;
 });
 

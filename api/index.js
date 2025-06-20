@@ -93,9 +93,29 @@ module.exports = async (req, res) => {
         return;
     }
 
+    async function fetchCounter(u) {
+        console.log(`Fetching ${u}...`);
+        const res = await fetch(u);
+        let text = '';
+        let data;
+        if (typeof res.text === 'function') {
+            text = await res.text();
+        } else if (typeof res.json === 'function') {
+            data = await res.json();
+            text = JSON.stringify(data);
+        }
+        console.log(`Response ${res.status} from ${u}: ${text}`);
+        if (!res.ok) {
+            throw new Error(`Status ${res.status}: ${text}`);
+        }
+        if (!data) {
+            data = JSON.parse(text);
+        }
+        return data;
+    }
+
     try {
-        const fetches = urls.map(u => fetch(u).then(r => r.json()));
-        const results = await Promise.all(fetches);
+        const results = await Promise.all(urls.map(fetchCounter));
         const total = results.reduce((sum, d) => sum + (d.number || 0), 0);
 
         res.json({ number: total });

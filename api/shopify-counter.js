@@ -89,15 +89,7 @@ module.exports = async (req, res) => {
     createdAtMin = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   }
   if (req.query?.created_at_min) {
- me19lw-codex/extend-fetchcount-to-handle-createdatmax
     createdAtMin = req.query.created_at_min;
-=======
-    const provided = req.query.created_at_min;
-    const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
-    if (isoRegex.test(provided) && !isNaN(new Date(provided).getTime())) {
-      createdAtMin = provided;
-    }
- main
   }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {

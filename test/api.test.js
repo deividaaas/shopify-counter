@@ -178,3 +178,27 @@ test('rejects url when hostname is not allowed', async () => {
   assert.strictEqual(called, false);
   global.fetch = originalFetch;
 });
+
+test('returns error when counter response not ok', async () => {
+  const originalFetch = global.fetch;
+  let call = 0;
+  global.fetch = async () => {
+    call++;
+    if (call === 1) {
+      return { ok: false, status: 500, text: async () => 'bad' };
+    }
+    return { ok: true, status: 200, json: async () => ({ number: 1 }) };
+  };
+  process.env.API_KEY = '';
+  process.env.ALLOWED_HOSTS = '';
+  const req = { headers: {} };
+  let statusCode = 200;
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(body) { this.body = body; }
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 502);
+  assert.deepStrictEqual(res.body, { number: 0, error: 'Status 500: bad' });
+  global.fetch = originalFetch;
+});
