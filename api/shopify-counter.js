@@ -26,7 +26,7 @@ async function fetchCount(shop, token, createdAtMin) {
   if (!shop || !token) {
     throw new Error('Missing shop or token');
   }
-  const url = new URL(`/admin/api/2024-04/orders/count.json`, `https://${shop}`);
+  const url = new URL(`/admin/api/2025-04/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
   // count all orders including closed/archived ones
   url.searchParams.set('status', 'any');
