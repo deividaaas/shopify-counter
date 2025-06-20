@@ -92,7 +92,7 @@ test('returns error when a shop fetch fails', async () => {
   const res = createRes();
   await handler(req, res);
   assert.strictEqual(res.statusCode, 502);
-  assert.deepStrictEqual(res.body, { number: 0, error: 'Failed to fetch count from shop 1' });
+  assert.deepStrictEqual(res.body, { number: 0, error: 'boom' });
   global.fetch = originalFetch;
 });
 
@@ -109,7 +109,7 @@ test('returns error when a second shop fetch fails', async () => {
   const res = createRes();
   await handler(req, res);
   assert.strictEqual(res.statusCode, 502);
-  assert.deepStrictEqual(res.body, { number: 0, error: 'Failed to fetch count from shop 2' });
+  assert.deepStrictEqual(res.body, { number: 0, error: 'boom' });
   global.fetch = originalFetch;
 });
 

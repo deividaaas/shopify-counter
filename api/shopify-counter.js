@@ -45,11 +45,11 @@ async function fetchCount(shop, token, createdAtMin) {
   }
   console.log(`Response ${res.status} from ${shop}: ${text}`);
   if (!res.ok) {
-    console.error(`Shopify request failed for ${shop}: ${res.status}`);
+    console.error(`Shopify request failed for ${shop}: ${res.status} ${text}`);
     if (res.status === 401) {
       console.error('Unauthorized access to Shopify');
     }
-    throw new Error(`Unexpected status code ${res.status}`);
+    throw new Error(`Status ${res.status}: ${text}`);
   }
   if (!data) {
     try {
@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 1 count', err);
-    res.status(502).json({ number: 0, error: 'Failed to fetch count from shop 1' });
+    res.status(502).json({ number: 0, error: err.message });
     return;
   }
   try {
@@ -116,7 +116,7 @@ module.exports = async (req, res) => {
     );
   } catch (err) {
     console.error('Failed to fetch shop 2 count', err);
-    res.status(502).json({ number: 0, error: 'Failed to fetch count from shop 2' });
+    res.status(502).json({ number: 0, error: err.message });
     return;
   }
   const total = results.butikk1 + results.butikk2;
