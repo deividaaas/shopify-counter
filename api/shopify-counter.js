@@ -30,8 +30,8 @@ async function fetchCount(shop, token, createdAtMin) {
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
   // count all orders including closed/archived ones
   url.searchParams.set('status', 'any');
-  const tokenId = token.slice(0, 6);
-  console.log(`Fetching ${url} with token ${tokenId}...`);
+  const tokenId = token.slice(0, 4) + '...' + token.slice(-4);
+  console.log(`Fetching ${url} for ${shop} with token ${tokenId}...`);
   const res = await fetch(url, {
     headers: { 'X-Shopify-Access-Token': token }
   });
