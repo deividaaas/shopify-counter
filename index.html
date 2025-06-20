@@ -100,6 +100,17 @@ body {
     border-color: #666;
     background-color: #fff;
   }
+  #period-controls {
+    margin-top: 10px;
+    font-size: 1.2vw;
+  }
+  #custom-dates {
+    margin-top: 5px;
+  }
+  #active-period {
+    margin-top: 10px;
+    font-size: 1.5vw;
+  }
 </style>
 </head>
 <body>
@@ -118,6 +129,20 @@ body {
       <span id="sales-value"></span>
       <span id="remaining-value"></span>
     </div>
+  </div>
+  <div id="active-period"></div>
+  <div id="period-controls">
+    <select id="period-select">
+      <option value="today">I dag</option>
+      <option value="yesterday">I går</option>
+      <option value="last7">Siste 7 dager</option>
+      <option value="last30">Siste 30 dager</option>
+      <option value="custom">Tilpasset periode</option>
+    </select>
+    <span id="custom-dates" style="display:none;">
+      <input type="date" id="custom-start">
+      <input type="date" id="custom-end">
+    </span>
   </div>
   <div id="api-controls">
     <div id="api-checkboxes"></div>
@@ -139,6 +164,11 @@ const counterElement = document.getElementById('counter');
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 const apiContainer = document.getElementById('api-checkboxes');
+const periodSelect = document.getElementById('period-select');
+const customDates = document.getElementById('custom-dates');
+const startInput = document.getElementById('custom-start');
+const endInput = document.getElementById('custom-end');
+const periodDisplay = document.getElementById('active-period');
 
 let apiList = JSON.parse(localStorage.getItem('apiList') || '[]');
 if (apiList.length === 0) {
@@ -221,6 +251,49 @@ function syncProgressWidth() {
   progressContainer.style.width = measureSixDigitWidth() + 'px';
 }
 
+function getDateRange() {
+  const now = new Date();
+  let start, end;
+  switch (periodSelect.value) {
+    case 'today':
+      start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      break;
+    case 'yesterday':
+      start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1));
+      end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      break;
+    case 'last7':
+      start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
+      end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      break;
+    case 'last30':
+      start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29));
+      end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      break;
+    case 'custom':
+      if (startInput.value) start = new Date(startInput.value + 'T00:00:00Z');
+      if (endInput.value) {
+        const tmp = new Date(endInput.value + 'T00:00:00Z');
+        end = new Date(tmp.getTime() + 86400000);
+      }
+      break;
+  }
+  return {
+    created_at_min: start ? start.toISOString() : undefined,
+    created_at_max: end ? end.toISOString() : undefined
+  };
+}
+
+function updatePeriodDisplay() {
+  const label = periodSelect.options[periodSelect.selectedIndex].textContent;
+  if (periodSelect.value === 'custom' && startInput.value && endInput.value) {
+    periodDisplay.textContent = `${startInput.value} - ${endInput.value}`;
+  } else {
+    periodDisplay.textContent = label;
+  }
+}
+
 function getColor(value, target) {
   if (value >= target * 1.1) return '#28a745';
   if (value >= target * 0.9) return '#FFC300';
@@ -252,6 +325,9 @@ async function updateCounter() {
   updateProgress(currentValue, currentColor);
   try {
     const params = new URLSearchParams();
+    const range = getDateRange();
+    if (range.created_at_min) params.set('created_at_min', range.created_at_min);
+    if (range.created_at_max) params.set('created_at_max', range.created_at_max);
     const enabled = apiList.filter(a => a.enabled !== false);
     enabled.forEach(a => {
       if (a.url) params.append('url', a.url);
@@ -316,7 +392,16 @@ goalLabel.addEventListener('blur', () => {
   localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
 });
 
+periodSelect.addEventListener('change', () => {
+  customDates.style.display = periodSelect.value === 'custom' ? 'inline-block' : 'none';
+  updatePeriodDisplay();
+  updateCounter();
+});
+startInput.addEventListener('change', () => { updatePeriodDisplay(); updateCounter(); });
+endInput.addEventListener('change', () => { updatePeriodDisplay(); updateCounter(); });
+
 syncProgressWidth();
+updatePeriodDisplay();
 updateCounter();
 setInterval(updateCounter, 5000);
 window.addEventListener('resize', syncProgressWidth);
