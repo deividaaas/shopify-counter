@@ -79,6 +79,23 @@ test('omits created_at_min when period=all', async () => {
   global.fetch = originalFetch;
 });
 
+test('uses provided created_at_min when valid', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+  };
+  process.env.API_KEY = '';
+  const value = '2023-08-01T00:00:00Z';
+  const req = { headers: {}, query: { created_at_min: value } };
+  const res = createRes();
+  await handler(req, res);
+  assert.strictEqual(urls[0].searchParams.get('created_at_min'), value);
+  assert.strictEqual(urls[1].searchParams.get('created_at_min'), value);
+  global.fetch = originalFetch;
+});
+
 test('returns error when a shop fetch fails', async () => {
   const originalFetch = global.fetch;
   let call = 0;
