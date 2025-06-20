@@ -100,6 +100,29 @@ test('forwards created_at_min and created_at_max query params', async () => {
   assert.strictEqual(urls[0].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_min'), '2024-05-01T00:00:00Z');
   assert.strictEqual(urls[1].searchParams.get('created_at_max'), '2024-05-31T23:59:59Z');
+ codex/log-response-status-and-handle-errors-in-api/index.js
+=======
+ codex/add-error-message-handling-in-index.html
+
+  global.fetch = originalFetch;
+});
+
+test('uses provided created_at_min when valid', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(url);
+    return { ok: true, status: 200, json: async () => ({ count: 1 }) };
+  };
+  process.env.API_KEY = '';
+  const value = '2023-08-01T00:00:00Z';
+  const req = { headers: {}, query: { created_at_min: value } };
+  const res = createRes();
+  await handler(req, res);
+  assert.strictEqual(urls[0].searchParams.get('created_at_min'), value);
+  assert.strictEqual(urls[1].searchParams.get('created_at_min'), value);
+ main
+ main
   global.fetch = originalFetch;
 });
 
