@@ -22,12 +22,13 @@ function validateEnv() {
   return errors;
 }
 
-async function fetchCount(shop, token, createdAtMin) {
+async function fetchCount(shop, token, createdAtMin, createdAtMax) {
   if (!shop || !token) {
     throw new Error('Missing shop or token');
   }
   const url = new URL(`/admin/api/2025-04/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
+  if (createdAtMax) url.searchParams.set('created_at_max', createdAtMax);
   // count all orders including closed/archived ones
   url.searchParams.set('status', 'any');
   const tokenId = token.slice(0, 4) + '...' + token.slice(-4);
@@ -78,6 +79,7 @@ module.exports = async (req, res) => {
   }
   const period = req.query?.period || 'month';
   let createdAtMin;
+  let createdAtMax = req.query?.created_at_max;
   const now = new Date();
   if (period === 'year') {
     createdAtMin = new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
@@ -87,11 +89,15 @@ module.exports = async (req, res) => {
     createdAtMin = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   }
   if (req.query?.created_at_min) {
+ me19lw-codex/extend-fetchcount-to-handle-createdatmax
+    createdAtMin = req.query.created_at_min;
+=======
     const provided = req.query.created_at_min;
     const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
     if (isoRegex.test(provided) && !isNaN(new Date(provided).getTime())) {
       createdAtMin = provided;
     }
+ main
   }
   const requiredKey = process.env.API_KEY;
   if (requiredKey) {
@@ -108,7 +114,8 @@ module.exports = async (req, res) => {
     results.butikk1 = await fetchCount(
       SHOPIFY_SHOP_1,
       SHOPIFY_ADMIN_TOKEN_1,
-      createdAtMin
+      createdAtMin,
+      createdAtMax
     );
   } catch (err) {
     console.error('Failed to fetch shop 1 count', err);
@@ -119,7 +126,8 @@ module.exports = async (req, res) => {
     results.butikk2 = await fetchCount(
       SHOPIFY_SHOP_2,
       SHOPIFY_ADMIN_TOKEN_2,
-      createdAtMin
+      createdAtMin,
+      createdAtMax
     );
   } catch (err) {
     console.error('Failed to fetch shop 2 count', err);
