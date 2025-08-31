@@ -1,9 +1,13 @@
 export const runtime = "nodejs";
 
+import { getAllowedShops, getTokenForShop } from "@/lib/shopify";
+
 export function GET() {
-  return Response.json({
-    shop: process.env.SHOPIFY_SHOP,
-    tokenExists: !!process.env.SHOPIFY_TOKEN,
-    apiVersion: process.env.SHOPIFY_API_VERSION,
-  });
+  const apiVersion = process.env.SHOPIFY_API_VERSION;
+  const shops = getAllowedShops();
+  const allowedShops = shops.map((shop) => ({
+    shop,
+    tokenExists: !!getTokenForShop(shop),
+  }));
+  return Response.json({ apiVersion, allowedShops });
 }
