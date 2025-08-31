@@ -1,15 +1,16 @@
 {
   "name": "shopify-counter",
   "version": "1.0.0",
-  "main": "api/index.js",
   "scripts": {
     "start": "vercel dev",
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
-    "vercel": "^46.1.1"
+    "vercel": "^46.1.1",
+    "typescript": "^5.4.5"
   }
 }
