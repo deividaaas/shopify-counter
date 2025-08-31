@@ -45,17 +45,55 @@ export async function GET(req: Request) {
     let cursor: string | null = null;
 
     while (true) {
-      const r = await fetch(urlGql, {
+      const resp = await fetch(urlGql, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": TOKEN },
         body: JSON.stringify({ query: GQL, variables: { query, first: 250, cursor } }),
       });
-      if (!r.ok) {
-        const text = await r.text();
-        throw new Error(`Shopify HTTP ${r.status} for ${shop}: ${text}`);
+      const ct = resp.headers.get("content-type") || "";
+      const raw = await resp.text();
+
+      if (!resp.ok) {
+        console.error("Shopify HTTP error", {
+          status: resp.status,
+          url: urlGql,
+          contentType: ct,
+          preview: raw.slice(0, 300),
+        });
+        return new Response(
+          JSON.stringify({ ok: false, error: `Shopify HTTP ${resp.status}` }),
+          { status: 502 }
+        );
       }
-      const data = await r.json();
-      if (data.errors) throw new Error(`GraphQL error for ${shop}: ${JSON.stringify(data.errors)}`);
+
+      if (!ct.includes("application/json")) {
+        console.error("Invalid content-type from Shopify", {
+          contentType: ct,
+          preview: raw.slice(0, 300),
+        });
+        return new Response(
+          JSON.stringify({ ok: false, error: "Invalid JSON from Shopify" }),
+          { status: 502 }
+        );
+      }
+
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        console.error("JSON parse error", { preview: raw.slice(0, 300) });
+        return new Response(
+          JSON.stringify({ ok: false, error: "Invalid JSON from Shopify" }),
+          { status: 502 }
+        );
+      }
+      if (data.errors) {
+        console.error("GraphQL error for Shopify", { errors: data.errors });
+        return new Response(
+          JSON.stringify({ ok: false, error: "Shopify GraphQL error" }),
+          { status: 502 }
+        );
+      }
 
       const edges = data.data.orders.edges as any[];
       for (const e of edges) {

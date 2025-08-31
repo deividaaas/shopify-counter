@@ -287,8 +287,8 @@ function getDateRange() {
       break;
   }
   return {
-    created_at_min: start ? start.toISOString() : undefined,
-    created_at_max: end ? end.toISOString() : undefined
+    from: start ? start.toISOString() : undefined,
+    to: end ? end.toISOString() : undefined
   };
 }
 
@@ -333,15 +333,10 @@ async function updateCounter() {
   try {
     const params = new URLSearchParams();
     const range = getDateRange();
-    if (range.created_at_min) params.set('created_at_min', range.created_at_min);
-    if (range.created_at_max) params.set('created_at_max', range.created_at_max);
-    const enabled = apiList.filter(a => a.enabled !== false);
-    enabled.forEach(a => {
-      if (a.url) params.append('url', a.url);
-    });
-    if (enabled.length === 0) params.set('source', 'none');
+    if (range.from) params.set('from', range.from);
+    if (range.to) params.set('to', range.to);
     const query = params.toString();
-    const res = await fetch('/api/shopify-counter' + (query ? '?' + query : ''));
+    const res = await fetch('/api/sales' + (query ? '?' + query : ''));
     const raw = await res.text();
     let data;
     try {
