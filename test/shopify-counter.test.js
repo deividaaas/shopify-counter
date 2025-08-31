@@ -1,9 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
-process.env.SHOPIFY_SHOP_1 = 'shop1.myshopify.com';
-process.env.SHOPIFY_ADMIN_TOKEN_1 = 't1';
-process.env.SHOPIFY_SHOP_2 = 'shop2.myshopify.com';
-process.env.SHOPIFY_ADMIN_TOKEN_2 = 't2';
+process.env.ALLOWED_SHOPS = 'shop1.myshopify.com,shop2.myshopify.com';
+process.env.SHOPIFY_TOKEN__SHOP1_MYSHOPIFY_COM = 't1';
+process.env.SHOPIFY_TOKEN__SHOP2_MYSHOPIFY_COM = 't2';
+process.env.SHOPIFY_API_VERSION = '2025-07';
 const handler = require('../api/shopify-counter.js');
 
 // helper to create mock response object
@@ -23,7 +23,11 @@ test('sums counts from both shops', async () => {
   const req = { headers: {}, query: {} };
   const res = createRes();
   await handler(req, res);
-  assert.deepStrictEqual(res.body, { number: 3, butikk1: 1, butikk2: 2 });
+  assert.deepStrictEqual(res.body, {
+    number: 3,
+    'shop1.myshopify.com': 1,
+    'shop2.myshopify.com': 2,
+  });
   global.fetch = originalFetch;
 });
 

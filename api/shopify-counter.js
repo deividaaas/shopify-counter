@@ -1,32 +1,42 @@
-const SHOPIFY_SHOP_1 = process.env.SHOPIFY_SHOP_1;
-const SHOPIFY_ADMIN_TOKEN_1 = process.env.SHOPIFY_ADMIN_TOKEN_1;
-const SHOPIFY_SHOP_2 = process.env.SHOPIFY_SHOP_2;
-const SHOPIFY_ADMIN_TOKEN_2 = process.env.SHOPIFY_ADMIN_TOKEN_2;
 const { timingSafeEqual } = require('crypto');
 
-function validateEnv() {
+function getShops() {
+  const list = (process.env.ALLOWED_SHOPS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return list.map((shop) => {
+    const envName = `SHOPIFY_TOKEN__${shop.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+    return { shop, token: process.env[envName], envName };
+  });
+}
+
+function validateEnv(shops) {
   const errors = [];
   const shopRegex = /^[a-z0-9-]+\.myshopify\.com$/i;
-  if (!SHOPIFY_SHOP_1 || !shopRegex.test(SHOPIFY_SHOP_1)) {
-    errors.push('SHOPIFY_SHOP_1');
+  if (!process.env.ALLOWED_SHOPS) {
+    errors.push('ALLOWED_SHOPS');
   }
-  if (!SHOPIFY_ADMIN_TOKEN_1 || SHOPIFY_ADMIN_TOKEN_1 === 'token1') {
-    errors.push('SHOPIFY_ADMIN_TOKEN_1');
+  for (const { shop, token, envName } of shops) {
+    if (!shopRegex.test(shop)) {
+      errors.push(`ALLOWED_SHOPS:${shop}`);
+    }
+    if (!token) {
+      errors.push(envName);
+    }
   }
-  if (!SHOPIFY_SHOP_2 || !shopRegex.test(SHOPIFY_SHOP_2)) {
-    errors.push('SHOPIFY_SHOP_2');
-  }
-  if (!SHOPIFY_ADMIN_TOKEN_2 || SHOPIFY_ADMIN_TOKEN_2 === 'token2') {
-    errors.push('SHOPIFY_ADMIN_TOKEN_2');
+  const versionRegex = /^\d{4}-\d{2}$/;
+  if (!process.env.SHOPIFY_API_VERSION || !versionRegex.test(process.env.SHOPIFY_API_VERSION)) {
+    errors.push('SHOPIFY_API_VERSION');
   }
   return errors;
 }
 
-async function fetchCount(shop, token, createdAtMin, createdAtMax) {
+async function fetchCount(shop, token, apiVersion, createdAtMin, createdAtMax) {
   if (!shop || !token) {
     throw new Error('Missing shop or token');
   }
-  const url = new URL(`/admin/api/2025-04/orders/count.json`, `https://${shop}`);
+  const url = new URL(`/admin/api/${apiVersion}/orders/count.json`, `https://${shop}`);
   if (createdAtMin) url.searchParams.set('created_at_min', createdAtMin);
   if (createdAtMax) url.searchParams.set('created_at_max', createdAtMax);
   // count all orders including closed/archived ones
@@ -60,12 +70,14 @@ async function fetchCount(shop, token, createdAtMin, createdAtMax) {
 }
 
 module.exports = async (req, res) => {
-  const envErrors = validateEnv();
+  const shops = getShops();
+  const envErrors = validateEnv(shops);
   if (envErrors.length) {
     console.error('Invalid Shopify configuration:', envErrors.join(', '));
     res.status(500).json({ error: 'Invalid Shopify configuration' });
     return;
   }
+  const apiVersion = process.env.SHOPIFY_API_VERSION;
   const period = req.query?.period || 'month';
   let createdAtMin;
   let createdAtMax = req.query?.created_at_max;
@@ -94,39 +106,23 @@ module.exports = async (req, res) => {
       return;
     }
   }
-  const results = { butikk1: 0, butikk2: 0 };
-  try {
-    results.butikk1 = await fetchCount(
-      SHOPIFY_SHOP_1,
-      SHOPIFY_ADMIN_TOKEN_1,
-      createdAtMin,
-      createdAtMax
-    );
-  } catch (err) {
-    console.error('Failed to fetch shop 1 count', err);
-    if (err.message === 'Invalid JSON from Shopify') {
-      res.status(500).json({ error: 'Shopify API returned invalid JSON' });
-    } else {
-      res.status(502).json({ number: 0, error: err.message });
+  const results = {};
+  let total = 0;
+  for (const { shop, token } of shops) {
+    try {
+      const count = await fetchCount(shop, token, apiVersion, createdAtMin, createdAtMax);
+      results[shop] = count;
+      total += count;
+    } catch (err) {
+      console.error(`Failed to fetch count for ${shop}`, err);
+      if (err.message === 'Invalid JSON from Shopify') {
+        res.status(500).json({ error: 'Shopify API returned invalid JSON' });
+      } else {
+        res.status(502).json({ number: 0, error: err.message });
+      }
+      return;
     }
-    return;
   }
-  try {
-    results.butikk2 = await fetchCount(
-      SHOPIFY_SHOP_2,
-      SHOPIFY_ADMIN_TOKEN_2,
-      createdAtMin,
-      createdAtMax
-    );
-  } catch (err) {
-    console.error('Failed to fetch shop 2 count', err);
-    if (err.message === 'Invalid JSON from Shopify') {
-      res.status(500).json({ error: 'Shopify API returned invalid JSON' });
-    } else {
-      res.status(502).json({ number: 0, error: err.message });
-    }
-    return;
-  }
-  const total = results.butikk1 + results.butikk2;
   res.json({ number: total, ...results });
 };
+
