@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "env": {
+    "ALLOWED_SHOPS": "9rds.myshopify.com",
+    "SHOPIFY_TOKEN__9RDS_MYSHOPIFY_COM": "<Admin API token with read_orders>",
+    "SHOPIFY_API_VERSION": "2025-07"
+  },
   "routes": [
     { "src": "/api/shopify-counter", "dest": "/api/shopify-counter.js" },
     { "src": "/api/(.*)", "dest": "/api/index.js" }

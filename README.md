@@ -5,7 +5,7 @@ This simple project displays a counter on a web page and updates it from a serve
 ## Setup
 
 1. Install dependencies with `npm install` (Node 18 or newer is required). This includes the Vercel CLI for running the development server.
-2. Set the environment variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`, `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` with your Shopify store domains and tokens. Values must look like `my-store.myshopify.com` and the tokens must be valid. These variables are required for both preview and production deployments. Copy `.env.example` to `.env` and replace the placeholder values. Define the same variables in your Vercel project to use them in deployed environments.
+2. Set the environment variables `ALLOWED_SHOPS`, `SHOPIFY_API_VERSION` and one `SHOPIFY_TOKEN__<SHOP>` for each store. `ALLOWED_SHOPS` is a comma-separated list of `myshopify.com` domains. Tokens follow the naming rule `SHOPIFY_TOKEN__` + uppercased shop domain with punctuation replaced by underscores (e.g. `SHOPIFY_TOKEN__SHOP1_MYSHOPIFY_COM`). Copy `.env.example` to `.env` and replace the placeholder values. Define the same variables in your Vercel project to use them in deployed environments.
 3. (Optional) You can still use `URL_1` and `URL_2` for the original counter endpoints.
 4. Start the development server with `vercel dev`.
 5. Open `index.html` in your browser to see the counter.
@@ -55,8 +55,8 @@ The API returns the combined order count along with counts for each shop:
 ```json
 {
   "number": 42,
-  "butikk1": 21,
-  "butikk2": 21
+  "shop1.myshopify.com": 21,
+  "shop2.myshopify.com": 21
 }
 ```
 
@@ -74,10 +74,7 @@ This command executes `node --test` under the hood.
 
 Follow these steps if the API does not return the expected counts after deployment:
 
-1. In Vercel, ensure the variables `SHOPIFY_SHOP_1`, `SHOPIFY_ADMIN_TOKEN_1`,
-   `SHOPIFY_SHOP_2` and `SHOPIFY_ADMIN_TOKEN_2` are defined for both *Production*
-   and *Preview* environments. The shop values must be your `myshopify.com`
-   domains without `https://`, and the tokens must be valid admin tokens.
+1. In Vercel, ensure `ALLOWED_SHOPS`, `SHOPIFY_API_VERSION` and one `SHOPIFY_TOKEN__<SHOP>` variable per shop are defined for both *Production* and *Preview* environments. The shop values must be your `myshopify.com` domains without `https://`, and the tokens must be valid admin tokens.
 2. Confirm that the tokens include the `read_orders` scope and that the app is
    installed and active in each store.
 3. After updating any variables, trigger a redeploy so the new values are
@@ -106,7 +103,7 @@ archived and closed orders are included. Make sure your admin tokens have the
 
    ```bash
    curl -H "X-Shopify-Access-Token: <TOKEN>" \
-     https://<SHOP>.myshopify.com/admin/api/2025-04/orders/count.json
+     https://<SHOP>.myshopify.com/admin/api/2025-07/orders/count.json
    ```
 
    Svaret bør være på formen `{ "count": n }`. Hvis du ikke får et gyldig tall,
