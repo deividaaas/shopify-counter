@@ -10,6 +10,8 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3",
     "vercel": "^46.1.1"
   }
 }
