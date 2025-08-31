@@ -4,8 +4,5 @@
     "SHOPIFY_SHOP": "9rds.myshopify.com",
     "SHOPIFY_TOKEN": "<Admin API token with read_orders>",
     "SHOPIFY_API_VERSION": "2025-07"
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.js" }
-  ]
+  }
 }
