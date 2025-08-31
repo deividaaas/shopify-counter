@@ -1,102 +1,80 @@
+import { apiVersion, ensureWhitelisted, getTokenForShop } from "@/lib/shopify";
 export const runtime = "nodejs";
 
-export async function GET(request: Request): Promise<Response> {
-  const { searchParams } = new URL(request.url);
-  let from = searchParams.get("from");
-  let to = searchParams.get("to");
-
-  if (!from || !to) {
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = now.getUTCMonth();
-    const start = new Date(Date.UTC(year, month, 1));
-    const end = new Date(Date.UTC(year, month + 1, 1) - 1);
-    from = start.toISOString();
-    to = end.toISOString();
-  } else {
-    from = new Date(from).toISOString();
-    to = new Date(to).toISOString();
-  }
-
-  const shop = process.env.SHOPIFY_SHOP;
-  const version = process.env.SHOPIFY_API_VERSION;
-  const token = process.env.SHOPIFY_TOKEN;
-  if (!shop || !version || !token) {
-    return Response.json({ ok: false, error: "Missing Shopify configuration" }, { status: 500 });
-  }
-
-  const endpoint = `https://${shop}/admin/api/${version}/graphql.json`;
-  const query = `query ($query: String!, $after: String) {
-    orders(first: 100, after: $after, query: $query) {
-      edges {
-        node {
-          totalPriceSet { shopMoney { amount } }
-          totalTaxSet { shopMoney { amount } }
-          totalDiscountsSet { shopMoney { amount } }
-          totalShippingPriceSet { shopMoney { amount } }
-        }
-        cursor
-      }
-      pageInfo { hasNextPage endCursor }
-    }
-  }`;
-
-  const search = `created_at:>=${from} created_at:<=${to} status:any`;
-  let cursor: string | null = null;
-  let count = 0;
-  let order_totals = 0;
-  let tax = 0;
-  let discounts = 0;
-  let shipping = 0;
-
+export async function GET(req: Request) {
   try {
-    while (true) {
-      const body = JSON.stringify({ query, variables: { query: search, after: cursor } });
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": token,
-        },
-        body,
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        if ([401, 403, 502].includes(res.status)) {
-          console.error(text);
-        }
-        return Response.json({ ok: false, error: text || `Status ${res.status}` }, { status: res.status });
-      }
-
-      const data = await res.json();
-      const orders = data?.data?.orders;
-      if (!orders) {
-        return Response.json({ ok: false, error: "Invalid response from Shopify" }, { status: 502 });
-      }
-
-      for (const edge of orders.edges) {
-        count += 1;
-        order_totals += Number(edge.node.totalPriceSet?.shopMoney?.amount || 0);
-        tax += Number(edge.node.totalTaxSet?.shopMoney?.amount || 0);
-        discounts += Number(edge.node.totalDiscountsSet?.shopMoney?.amount || 0);
-        shipping += Number(edge.node.totalShippingPriceSet?.shopMoney?.amount || 0);
-      }
-
-      if (!orders.pageInfo.hasNextPage) {
-        break;
-      }
-      cursor = orders.pageInfo.endCursor;
+    const url = new URL(req.url);
+    let shop = (url.searchParams.get("shop") || "").trim();
+    if (!shop) {
+      // single-shop fallback
+      shop = String(process.env.SHOPIFY_SHOP || "").trim();
     }
-  } catch (err: any) {
-    console.error(err);
-    return Response.json({ ok: false, error: err.message }, { status: 502 });
-  }
+    if (!shop) {
+      return new Response(JSON.stringify({ ok:false, error:"Missing shop" }), { status: 400 });
+    }
 
-  return Response.json({
-    ok: true,
-    from,
-    to,
-    totals: { count, order_totals, tax, discounts, shipping },
-  });
+    ensureWhitelisted(shop);
+    const TOKEN = getTokenForShop(shop);
+    if (!TOKEN) {
+      return new Response(JSON.stringify({ ok:false, error:`Missing token for ${shop}` }), { status: 500 });
+    }
+
+    const from = url.searchParams.get("from") || new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString();
+    const to   = url.searchParams.get("to")   || new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1) - 1).toISOString();
+
+    const GQL = `
+      query OrdersSales($query: String!, $first: Int!, $cursor: String) {
+        orders(first: $first, after: $cursor, query: $query, sortKey:CREATED_AT) {
+          edges {
+            cursor
+            node {
+              totalPriceSet { shopMoney { amount } }
+              totalTaxSet { shopMoney { amount } }
+              totalDiscountsSet { shopMoney { amount } }
+              totalShippingPriceSet { shopMoney { amount } }
+            }
+          }
+          pageInfo { hasNextPage }
+        }
+      }`;
+
+    const query = `created_at:>=${from} created_at:<=${to} status:any`;
+    const urlGql = `https://${shop}/admin/api/${apiVersion()}/graphql.json`;
+
+    const totals = { count: 0, order_totals: 0, tax: 0, discounts: 0, shipping: 0 };
+    let cursor: string | null = null;
+
+    while (true) {
+      const r = await fetch(urlGql, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": TOKEN },
+        body: JSON.stringify({ query: GQL, variables: { query, first: 250, cursor } }),
+      });
+      if (!r.ok) {
+        const text = await r.text();
+        throw new Error(`Shopify HTTP ${r.status} for ${shop}: ${text}`);
+      }
+      const data = await r.json();
+      if (data.errors) throw new Error(`GraphQL error for ${shop}: ${JSON.stringify(data.errors)}`);
+
+      const edges = data.data.orders.edges as any[];
+      for (const e of edges) {
+        const n = e.node;
+        const num = (p: any) => Number(p?.shopMoney?.amount || 0);
+        totals.count += 1;
+        totals.order_totals += num(n.totalPriceSet);
+        totals.tax       += num(n.totalTaxSet);
+        totals.discounts += num(n.totalDiscountsSet);
+        totals.shipping  += num(n.totalShippingPriceSet);
+      }
+      if (data.data.orders.pageInfo.hasNextPage) {
+        cursor = edges[edges.length - 1].cursor;
+      } else break;
+    }
+
+    return Response.json({ ok: true, from, to, perShop: [{ shop, totals }], total: totals });
+  } catch (e: any) {
+    console.error(e);
+    return new Response(JSON.stringify({ ok:false, error: e.message || "Server error" }), { status: 500 });
+  }
 }
