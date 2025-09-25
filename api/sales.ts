@@ -98,7 +98,12 @@ export default async function handler(req: any, res: any) {
       } else break;
     }
 
-    res.json({ ok: true, perShop: [{ shop, totals }], total: totals });
+    res.json({
+      ok: true,
+      perShop: [{ shop, totals }],
+      total: totals,
+      number: totals.order_totals,
+    });
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ ok: false, error: e.message || "Server error" });
